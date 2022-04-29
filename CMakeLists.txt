@@ -2,6 +2,6 @@ cmake_minimum_required(VERSION 3.1)
 
 project(asl)
 
-add_executable(straight straight.cpp)
+add_executable(exact exact.cpp)
 
-target_compile_options(straight PRIVATE -O3 -march=native)
+target_compile_options(exact PRIVATE -O3 -march=native)
