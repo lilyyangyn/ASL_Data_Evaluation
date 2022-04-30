@@ -4,4 +4,4 @@ project(asl)
 
 add_executable(exact exact.cpp)
 
-target_compile_options(exact PRIVATE -O3 -march=native)
+target_compile_options(exact PRIVATE -march=native)
