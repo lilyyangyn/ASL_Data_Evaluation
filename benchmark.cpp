@@ -2,18 +2,20 @@
 #include <functional>
 #include <cstdint>
 #include <cstdio>
+#include <vector>
 
 namespace benchmark {
 
 typedef struct Benchmark {
     const char* name;
     std::function<void()> func;
+    double result;
+
+    Benchmark(const char* n, std::function<void()> f, double r) : name(n), func(f), result(r) {}
 } Benchmark;
 
-constexpr const int max_bench = 1024;
 
-static Benchmark bench[max_bench];
-static size_t bench_count = 0;
+static std::vector<Benchmark> bench;
 
 static double Measure(const Benchmark& bench) {
     auto start = std::chrono::steady_clock::now();
@@ -26,25 +28,22 @@ static double Measure(const Benchmark& bench) {
 }
 
 void Register(const char* name, std::function<void()> f) {
-    bench[bench_count].name = name;
-    bench[bench_count].func = f;
-    bench_count++;
+    bench.emplace_back(name, f, 0);
 }
 
 void Run(bool json_output) {
-    double result[max_bench];
-    for (size_t i = 0 ; i < bench_count; i ++) {
-        result[i] = Measure(bench[i]);
+    for (auto& v : bench) {
+        v.result = Measure(v);
     }
 
     if (json_output) {
         printf("{\n");
-        for (size_t i = 0; i < bench_count; i ++) {
-            printf("  \"%s\": {\n", bench[i].name);
-            printf("    \"ns\": \"%f\"\n", result[i]);
+        for (auto it = bench.begin(); it != bench.end(); it ++) {
+            printf("  \"%s\": {\n", it->name);
+            printf("    \"ns\": \"%f\"\n", it->result);
             printf("  }");
 
-            if (i != bench_count  - 1) {
+            if (it + 1 != bench.end()) {
                 printf(",");
             }
 
@@ -52,8 +51,8 @@ void Run(bool json_output) {
         }
         printf("}\n");
     } else {
-        for (size_t i = 0; i < bench_count; i ++) {
-            printf("%s: %f nanoseconds (%f seconds)\n", bench[i].name, result[i], result[i] / 1e9);
+        for (auto& v : bench) {
+            printf("%s: %f nanoseconds (%f seconds)\n", v.name, v.result, v.result / 1e9);
         }
     }
 }
