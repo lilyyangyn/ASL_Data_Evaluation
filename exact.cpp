@@ -169,7 +169,7 @@ static void compute_single_unweighted_knn_class_shapley(
 #endif
 }
 
-static void compute_sp(
+static void compute_sp_plain(
     const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
     const Matrix* y_test, uint64_t K, std::vector<double>& mid,
     Matrix* gt, Matrix* sp) {
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
         data->y_test.pprint("y_test");
     }
 
-    benchmark::Register("exact_sp_plain", std::bind(compute_sp, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
+    benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
 
     benchmark::Run(p.get<bool>("-j"));
 
