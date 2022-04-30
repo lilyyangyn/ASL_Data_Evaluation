@@ -45,11 +45,11 @@ public:
         return this->val;
     }
 
-    double getElement(int i, int j) const {
+    double getElement(size_t i, size_t j) const {
         return this->val[i * this->n + j];
     }
 
-    void setElement(int i, int j, double d) {
+    void setElement(size_t i, size_t j, double d) {
         this->val[i*this->n + j] = d;
     }
 
@@ -92,9 +92,6 @@ static std::vector<size_t> argsort(const std::vector<double>& mid) {
 
 
 static void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<double>& mid) {
-    double* pa = x_train->getVal();
-    double* pb = x_test->getVal();
-    double* pc = gt->getVal();
     auto x_train_M = x_train->getM();
     auto x_train_N = x_train->getN();
     auto x_test_M = x_test->getM();
