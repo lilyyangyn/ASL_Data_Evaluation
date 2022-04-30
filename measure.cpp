@@ -86,7 +86,8 @@ int main(int argc, char** argv) {
     argparse::ArgumentParser p("exact");
 
     p.add_argument("-j", "--json").default_value(false).implicit_value(true).help("Json output");
-    p.add_argument("-p", "--print").default_value(false).implicit_value(true).help("Print input data and result");
+    p.add_argument("-r", "--repeat").default_value(1UL).scan<'u', size_t>().help("Repeat times");
+    p.add_argument("-v", "--verbose").default_value(false).implicit_value(true).help("Print input data and result");
     p.add_argument("-i", "--input").required().help("The input directory");
 
     try {
@@ -100,14 +101,14 @@ int main(int argc, char** argv) {
         printf("%s\n", ss.str().c_str());
         exit(-1);
     }
-
+    auto verbose = p.get<bool>("-v");
     auto data = load_data(p.get<std::string>("-i"));
     Matrix gt(data->x_test.getM(), data->x_train.getM());
     Matrix sp(gt.getM(), gt.getN());
     std::vector<double> mid;
     mid.resize(data->x_train.getM());
 
-    if (p.get<bool>("-v")) {
+    if (verbose) {
         data->x_train.pprint("x_train");
         data->x_test.pprint("x_test");
         data->y_train.pprint("y_train");
@@ -116,9 +117,9 @@ int main(int argc, char** argv) {
 
     benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
 
-    benchmark::Run(p.get<bool>("-j"));
+    benchmark::Run(p.get<bool>("-j"), p.get<size_t>("-r"));
 
-    if (p.get<bool>("-v")) {
+    if (verbose) {
         gt.pprint("gt");
         sp.pprint("sp");
     }

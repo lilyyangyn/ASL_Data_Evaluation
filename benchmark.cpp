@@ -10,16 +10,16 @@ namespace benchmark {
 typedef struct Benchmark {
     const char* name;
     std::function<void()> func;
-    uint64_t result;
+    double result;
 
-    Benchmark(const char* n, std::function<void()> f, uint64_t r) : name(n), func(f), result(r) {}
+    Benchmark(const char* n, std::function<void()> f, double r) : name(n), func(f), result(r) {}
 } Benchmark;
 
 
 static std::vector<Benchmark> bench;
+static unsigned int dummy;
 
 static uint64_t Measure(const Benchmark& bench) {
-    unsigned int dummy;
     auto start = __rdtscp(&dummy);
 
     bench.func();
@@ -33,16 +33,19 @@ void Register(const char* name, std::function<void()> f) {
     bench.emplace_back(name, f, 0);
 }
 
-void Run(bool json_output) {
+void Run(bool json_output, size_t repeat) {
     for (auto& v : bench) {
-        v.result = Measure(v);
+        v.result = 0;
+        for (size_t i = 0; i < repeat; i ++ ) {
+            v.result += Measure(v) / repeat;
+        }
     }
 
     if (json_output) {
         printf("{\n");
         for (auto it = bench.begin(); it != bench.end(); it ++) {
             printf("  \"%s\": {\n", it->name);
-            printf("    \"cycles\": \"%" PRIu64 "\"\n", it->result);
+            printf("    \"cycles\": \"%f\"\n", it->result);
             printf("  }");
 
             if (it + 1 != bench.end()) {
@@ -54,7 +57,7 @@ void Run(bool json_output) {
         printf("}\n");
     } else {
         for (auto& v : bench) {
-            printf("%s: %" PRIu64 " cycles\n", v.name, v.result);
+            printf("%s: %f cycles (repeat %zd times)\n", v.name, v.result, repeat);
         }
     }
 }
