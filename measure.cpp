@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
     std::vector<double> mid;
     mid.resize(data->x_train.getM());
 
-    if (p.get<bool>("-p")) {
+    if (p.get<bool>("-v")) {
         data->x_train.pprint("x_train");
         data->x_test.pprint("x_test");
         data->y_train.pprint("y_train");
@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
 
     benchmark::Run(p.get<bool>("-j"));
 
-    if (p.get<bool>("-p")) {
+    if (p.get<bool>("-v")) {
         gt.pprint("gt");
         sp.pprint("sp");
     }
