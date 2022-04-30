@@ -19,6 +19,7 @@ public:
     Matrix(uint64_t vm, uint64_t vn) : n(vn), m(vm) {
         size_t sz = sizeof(double) * n * m;
         this->val = new double[sz];
+        memset(this->val, 0, sz);
     }
 
     Matrix(const double* d, uint64_t vm, uint64_t vn) : Matrix(vm, vn) {
@@ -155,12 +156,12 @@ static void compute_single_unweighted_knn_class_shapley(
     assert(result->getM() == N2);
 
     for (size_t j = 0; j < N2; j++) {
-            result->setElement(j, gt->getElement(j, gtN - 1), int(y_train->getElement(0, gt->getElement(j, gtN - 1)) == y_test->getElement(0, j)) / double(N1));
-        for (size_t i = N1 - 2; i > -1; i --) {
+        result->setElement(j, gt->getElement(j, gtN - 1), int(y_train->getElement(0, gt->getElement(j, gtN - 1)) == y_test->getElement(0, j)) / double(N1));
+        for (size_t i = N1 - 2; i <= N1 -2 ; i --) {
             result->setElement(j, gt->getElement(j, i), 
                 result->getElement(j, gt->getElement(j, i+ 1)) + (
-                    int(y_train->getElement(0, gt->getElement(j, i)) == y_test->getElement(0, j)) -
-                    int(y_train->getElement(j, i + 1) == y_test->getElement(0, j)) / K * std::min(K, i + 1) / (i + 1)
+                    double(int(y_train->getElement(0, gt->getElement(j, i)) == y_test->getElement(0, j)) -
+                    int(y_train->getElement(0, gt->getElement(j, i + 1)) == y_test->getElement(0, j))) / double(K) * std::min(K, i + 1) / double(i + 1)
                 ));
         }
     }
