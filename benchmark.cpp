@@ -37,7 +37,7 @@ void Run(bool json_output, size_t repeat) {
     for (auto& v : bench) {
         v.result = 0;
         for (size_t i = 0; i < repeat; i ++ ) {
-            v.result += Measure(v) / repeat;
+            v.result += Measure(v) / double(repeat);
         }
     }
 
