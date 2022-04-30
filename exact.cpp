@@ -1,5 +1,4 @@
 #include <chrono>
-#include <functional>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -7,6 +6,8 @@
 #include <algorithm>
 #include <vector>
 #include <assert.h>
+#include "lazycsv.hpp"
+#include "benchmark.h"
 
 // A mxn matrix
 // Simple wrapper, no check and easy to overflow, be cautious
@@ -67,59 +68,6 @@ public:
         printf("--------\n");
     }
 };
-
-typedef struct Benchmark {
-    const char* name;
-    std::function<void()> func;
-} Benchmark;
-
-constexpr const int max_bench = 1024;
-
-static Benchmark bench[max_bench];
-static size_t bench_count = 0;
-
-static double measure_function(const Benchmark& bench) {
-    auto start = std::chrono::steady_clock::now();
-
-    bench.func();
-
-    auto end = std::chrono::steady_clock::now();
-
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-}
-
-static void register_benchmark(const char* name, std::function<void()> f) {
-    bench[bench_count].name = name;
-    bench[bench_count].func = f;
-    bench_count++;
-}
-
-static void run_benchmark(bool json_output) {
-    double result[max_bench];
-    for (size_t i = 0 ; i < bench_count; i ++) {
-        result[i] = measure_function(bench[i]);
-    }
-
-    if (json_output) {
-        printf("{\n");
-        for (size_t i = 0; i < bench_count; i ++) {
-            printf("  \"%s\": {\n", bench[i].name);
-            printf("    \"ns\": \"%f\"\n", result[i]);
-            printf("  }");
-
-            if (i != bench_count  - 1) {
-                printf(",");
-            }
-
-            printf("\n");
-        }
-        printf("}\n");
-    } else {
-        for (size_t i = 0; i < bench_count; i ++) {
-            printf("%s: %f nanoseconds (%f seconds)\n", bench[i].name, result[i], result[i] / 1e9);
-        }
-    }
-}
 
 static std::vector<size_t> argsort(const std::vector<double>& mid) {
     std::vector<size_t> v(mid.size());
@@ -258,9 +206,9 @@ int main(int argc, char** argv) {
         json_output = true;
     }
 
-    register_benchmark("exact_sp", std::bind(compute_sp, &x_train, &x_test, &y_train, &y_test, 1, mid, &gt, &sp));
+    benchmark::Register("exact_sp", std::bind(compute_sp, &x_train, &x_test, &y_train, &y_test, 1, mid, &gt, &sp));
 
-    run_benchmark(json_output);
+    benchmark::Run(json_output);
 
     return 0;
 }
