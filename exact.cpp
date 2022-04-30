@@ -35,11 +35,6 @@ void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<do
     auto N2 = x_test_M;
     // bn == an
 
-#ifndef NDEBUG
-    x_train->pprint("x_train");
-    x_test->pprint("x_test");
-#endif
-
     assert(x_test_N == x_train_N);
     assert(gt->getM() == N2);
     assert(gt->getN() == N1);
@@ -59,10 +54,6 @@ void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<do
             gt->setElement(i, k, sorted[k]);
         }
     }
-
-#ifndef NDEBUG
-    gt->pprint("gt");
-#endif
 }
 
 void compute_single_unweighted_knn_class_shapley(
@@ -72,13 +63,6 @@ void compute_single_unweighted_knn_class_shapley(
     auto N1 = x_train->getM();
     auto N2 = gt->getM();
     auto gtN = gt->getN();
-
-#ifndef NDEBUG
-    x_train->pprint("x_train");
-    y_train->pprint("y_train");
-    gt->pprint("gt");
-    y_test->pprint("y_test");
-#endif
 
     assert(y_train->getM() == 1);
     assert(y_test->getM() == 1);
@@ -95,10 +79,6 @@ void compute_single_unweighted_knn_class_shapley(
                 ));
         }
     }
-
-#ifndef NDEBUG
-    result->pprint("sp");
-#endif
 }
 
 void compute_sp_plain(
