@@ -1,30 +1,32 @@
-#include <chrono>
 #include <functional>
 #include <cstdint>
 #include <cstdio>
+#include <cinttypes>
 #include <vector>
+#include <x86intrin.h>
 
 namespace benchmark {
 
 typedef struct Benchmark {
     const char* name;
     std::function<void()> func;
-    double result;
+    uint64_t result;
 
-    Benchmark(const char* n, std::function<void()> f, double r) : name(n), func(f), result(r) {}
+    Benchmark(const char* n, std::function<void()> f, uint64_t r) : name(n), func(f), result(r) {}
 } Benchmark;
 
 
 static std::vector<Benchmark> bench;
 
-static double Measure(const Benchmark& bench) {
-    auto start = std::chrono::steady_clock::now();
+static uint64_t Measure(const Benchmark& bench) {
+    unsigned int dummy;
+    auto start = __rdtscp(&dummy);
 
     bench.func();
 
-    auto end = std::chrono::steady_clock::now();
+    auto end = __rdtscp(&dummy);
 
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    return end - start;
 }
 
 void Register(const char* name, std::function<void()> f) {
@@ -40,7 +42,7 @@ void Run(bool json_output) {
         printf("{\n");
         for (auto it = bench.begin(); it != bench.end(); it ++) {
             printf("  \"%s\": {\n", it->name);
-            printf("    \"ns\": \"%f\"\n", it->result);
+            printf("    \"cycles\": \"%" PRIu64 "\"\n", it->result);
             printf("  }");
 
             if (it + 1 != bench.end()) {
@@ -52,7 +54,7 @@ void Run(bool json_output) {
         printf("}\n");
     } else {
         for (auto& v : bench) {
-            printf("%s: %f nanoseconds (%f seconds)\n", v.name, v.result, v.result / 1e9);
+            printf("%s: %" PRIu64 " cycles\n", v.name, v.result);
         }
     }
 }
