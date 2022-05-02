@@ -156,7 +156,7 @@ static void test_simple_array() {
 }
 
 static void test_arrays() {
-    int i = 2;
+    int i = 0;
     while (true) {
         std::filesystem::path input_directory = "../tests/test_set_" + std::to_string(i);
         if (!std::filesystem::exists(input_directory)) {
