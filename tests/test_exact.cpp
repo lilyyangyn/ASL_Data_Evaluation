@@ -4,6 +4,8 @@
 #include "matrix.h"
 #include <cmath>
 #include <filesystem>
+#include <fstream>
+
 
 const double eps = 1e-6;
 const int num_test_sets = 1;
@@ -92,6 +94,24 @@ static std::unique_ptr<InputData> load_data(const std::filesystem::path& input_d
             &y_test[0], y_test_m, y_test_n);
 }
 
+static void write_csv(const std::filesystem::path& path, Matrix* matrix) {
+    std::ofstream out(path);
+
+    size_t M = matrix->getM();
+    size_t N = matrix->getN();
+    // double* val = matrix->getVal();
+    for (size_t m = 0; m < M; m++) {
+        for (size_t n = 0; n < N - 1; n++) {
+            out << std::fixed << std::setprecision(8) << matrix->getElement(m, n) << ", ";
+        }
+        out << std::fixed << std::setprecision(8) << matrix->getElement(m, N-1);
+        if (m != M-1) {
+            out << "\n";
+        }
+    }
+
+}
+
 static void test_simple_array() {
     double a1[][2] = {
         {0.47069075, 0.06548475},
@@ -136,7 +156,7 @@ static void test_simple_array() {
 }
 
 static void test_arrays() {
-    int i = 0;
+    int i = 2;
     while (true) {
         std::filesystem::path input_directory = "../tests/test_set_" + std::to_string(i);
         if (!std::filesystem::exists(input_directory)) {
@@ -154,6 +174,9 @@ static void test_arrays() {
         size_t r_gt_m, r_gt_n, r_sp_m, r_sp_n;
         Matrix r_gt(&read_csv(input_directory / "knn_gt.csv", r_gt_m, r_gt_n)[0], r_gt_m, r_gt_n);
         Matrix r_sp(&read_csv(input_directory / "sp_gt.csv", r_sp_m, r_sp_n)[0], r_sp_m, r_sp_n);
+
+        write_csv(input_directory / "my_knn_gt.csv", &gt);
+        write_csv(input_directory / "my_sp_gt.csv", &sp);
 
         cmp_matrix(&gt, &r_gt);
         cmp_matrix(&sp, &r_sp);
