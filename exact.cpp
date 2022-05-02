@@ -50,7 +50,7 @@ void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<do
             mid[j] = std::sqrt(mid[j]);
         }
         auto sorted = argsort(mid);
-        for (size_t k = 0; k < N2; k ++) {
+        for (size_t k = 0; k < N1; k ++) {
             gt->setElement(i, k, sorted[k]);
         }
     }
@@ -75,7 +75,7 @@ void compute_single_unweighted_knn_class_shapley(
             result->setElement(j, gt->getElement(j, i), 
                 result->getElement(j, gt->getElement(j, i+ 1)) + (
                     double(int(y_train->getElement(0, gt->getElement(j, i)) == y_test->getElement(0, j)) -
-                    int(y_train->getElement(0, gt->getElement(j, i + 1)) == y_test->getElement(0, j))) / double(K) * std::min(K, i + 1) / double(i + 1)
+                    int(y_train->getElement(0, gt->getElement(j, i + 1)) == y_test->getElement(0, j))) / double(K) * std::min(size_t(K), i + 1) / double(i + 1)
                 ));
         }
     }
