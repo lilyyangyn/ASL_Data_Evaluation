@@ -33,7 +33,9 @@ static void cmp_matrix(const Matrix* a, const Matrix* b) {
 
     for (size_t i = 0 ; i < M; i ++) {
         for (size_t j = 0; j < N; j ++) {
-            TEST_CHECK(std::fabs(a->getElement(i, j) - b->getElement(i, j)) < eps);
+            // printf("%lu, %lu\n", i, j);
+            // printf("%f, %f\n", a->getElement(i, j), b->getElement(i, j));
+            TEST_ASSERT(std::fabs(a->getElement(i, j) - b->getElement(i, j)) < eps);
         }
     }
 }
@@ -180,6 +182,8 @@ static void test_arrays() {
 
         cmp_matrix(&gt, &r_gt);
         cmp_matrix(&sp, &r_sp);
+
+        printf("Test %d succeeds!\n", i);
 
         i++;
     }
