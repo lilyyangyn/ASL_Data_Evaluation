@@ -18,6 +18,7 @@ static void cmp(const Matrix* m, const double* v) {
     for (size_t i = 0 ; i < M; i ++) {
         for (size_t j = 0; j < N; j ++) {
             TEST_CHECK(std::fabs(m->getElement(i, j) - v[i * N + j]) < eps);
+            TEST_MSG("Wrong (%zd, %zd): %f != %f", i, j, m->getElement(i, j), v[i*N + j]);
         }
     }
 }
@@ -36,65 +37,10 @@ static void cmp_matrix(const Matrix* a, const Matrix* b) {
         for (size_t j = 0; j < N; j ++) {
             // printf("%lu, %lu\n", i, j);
             // printf("%f, %f\n", a->getElement(i, j), b->getElement(i, j));
-            TEST_ASSERT(std::fabs(a->getElement(i, j) - b->getElement(i, j)) < eps);
+            TEST_CHECK(std::fabs(a->getElement(i, j) - b->getElement(i, j)) < eps);
+            TEST_MSG("Wrong (%zd, %zd): %f != (%zd, %zd) %f\n", i, j, a->getElement(i, j), i, j, b->getElement(i, j));
         }
     }
-}
-
-typedef struct InputData {
-    Matrix x_train;
-    Matrix x_test;
-    Matrix y_train;
-    Matrix y_test;
-
-    InputData(
-            const double* x_train_data, size_t x_train_m, size_t x_train_n,
-            const double* x_test_data, size_t x_test_m, size_t x_test_n,
-            const double* y_train_data, size_t y_train_m, size_t y_train_n,
-            const double* y_test_data, size_t y_test_m, size_t y_test_n) :
-            x_train(x_train_data, x_train_m, x_train_n),
-            x_test(x_test_data, x_test_m, x_test_n),
-            y_train(y_train_data, y_train_m, y_train_n),
-            y_test(y_test_data, y_test_m, y_test_n) {}
-} InputData;
-
-static std::vector<double> read_csv(const std::filesystem::path& path, size_t& M, size_t& N) {
-    std::vector<double> data;
-    lazycsv::parser<lazycsv::mmap_source, lazycsv::has_header<false>> p {path.string()};
-    M = 0;
-    N = 0;
-
-    for (const auto row : p) {
-        M++;
-        N = 0;
-        for (const auto cell : row) {
-            N++;
-            auto it = cell.raw();
-            data.push_back(std::stod(std::string(it)));
-        }
-    }
-
-    return data;
-}
-
-static std::unique_ptr<InputData> load_data(const std::filesystem::path& input_directory) {
-    size_t x_train_m, x_train_n, x_test_m, x_test_n, y_train_m, y_train_n, y_test_m, y_test_n;
-
-    auto x_train = read_csv(input_directory / "x_train.csv", x_train_m, x_train_n);
-    auto x_test = read_csv(input_directory / "x_test.csv", x_test_m, x_test_n);
-    auto y_train = read_csv(input_directory / "y_train.csv", y_train_m, y_train_n);
-    auto y_test = read_csv(input_directory / "y_test.csv", y_test_m, y_test_n);
-
-    assert(x_train_n * x_train_m == x_train.size());
-    assert(x_test_n * x_test_m == x_test.size());
-    assert(y_train_n * y_train_m == y_train.size());
-    assert(y_test_n * y_test_m == y_test.size());
-
-    return std::make_unique<InputData>(
-            &x_train[0], x_train_m, x_train_n,
-            &x_test[0], x_test_m, x_test_n,
-            &y_train[0], y_train_m, y_train_n,
-            &y_test[0], y_test_m, y_test_n);
 }
 
 static void write_csv(const std::filesystem::path& path, Matrix* matrix) {
@@ -158,43 +104,63 @@ static void test_simple_array() {
     return;
 }
 
-static void test_arrays() {
-    int i = 0;
-    while (true) {
-        std::filesystem::path input_directory = "../tests/test_set_" + std::to_string(i);
-        if (!std::filesystem::exists(input_directory)) {
-            break;
-        }
+// Allow cmake to inject this path
+#ifndef TEST_DATA_DIR
+#define TEST_DATA_DIR "../tests/"
+#endif
 
-        auto data = load_data(input_directory);
-        Matrix gt(data->x_test.getM(), data->x_train.getM());
-        Matrix sp(gt.getM(), gt.getN());
-        std::vector<double> mid;
-        mid.resize(data->x_train.getM());
+#define TEST_SET_N(N) \
+    static void test_set_##N() { \
+        std::filesystem::path input_directory = std::string(TEST_DATA_DIR); \
+        input_directory = input_directory / std::string("test_set_" #N); \
+        TEST_ASSERT(std::filesystem::exists(input_directory)); \
+        auto data = load_exact_data(input_directory);\
+        Matrix gt(data->x_test.getM(), data->x_train.getM());\
+        Matrix sp(gt.getM(), gt.getN());\
+        std::vector<double> mid;\
+        mid.resize(data->x_train.getM());\
+        compute_sp_plain(&data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp);\
+        size_t r_gt_m, r_gt_n, r_sp_m, r_sp_n;\
+        auto v_gt = read_csv(input_directory / "knn_gt.csv", r_gt_m, r_gt_n);\
+        auto v_sp = read_csv(input_directory / "sp_gt.csv", r_sp_m, r_sp_n);\
+        Matrix r_gt(v_gt, r_gt_m, r_gt_n);\
+        Matrix r_sp(v_sp, r_sp_m, r_sp_n);\
+        write_csv(input_directory / "my_knn_gt.csv", &gt);\
+        write_csv(input_directory / "my_sp_gt.csv", &sp);\
+        cmp_matrix(&gt, &r_gt);\
+        cmp_matrix(&sp, &r_sp);\
+    } \
 
-        compute_sp_plain(&data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp);
+TEST_SET_N(0)
+TEST_SET_N(1)
+TEST_SET_N(2)
+TEST_SET_N(3)
+TEST_SET_N(4)
+TEST_SET_N(5)
+TEST_SET_N(6)
+TEST_SET_N(7)
+TEST_SET_N(8)
+TEST_SET_N(9)
+TEST_SET_N(10)
+TEST_SET_N(11)
+TEST_SET_N(12)
 
-        size_t r_gt_m, r_gt_n, r_sp_m, r_sp_n;
-        Matrix r_gt(&read_csv(input_directory / "knn_gt.csv", r_gt_m, r_gt_n)[0], r_gt_m, r_gt_n);
-        Matrix r_sp(&read_csv(input_directory / "sp_gt.csv", r_sp_m, r_sp_n)[0], r_sp_m, r_sp_n);
-
-        write_csv(input_directory / "my_knn_gt.csv", &gt);
-        write_csv(input_directory / "my_sp_gt.csv", &sp);
-
-        cmp_matrix(&gt, &r_gt);
-        cmp_matrix(&sp, &r_sp);
-
-        printf("Test %d succeeds!\n", i);
-
-        i++;
-    }
-    
-    return;
-    
-}
+#define TEST_SET_N_ENTRY(N) "test_set_" #N, test_set_##N
 
 TEST_LIST = {
     { "test_simple_array", test_simple_array },
-    { "test_arrays", test_arrays },
+    { TEST_SET_N_ENTRY(0) },
+    { TEST_SET_N_ENTRY(1) },
+    { TEST_SET_N_ENTRY(2) },
+    { TEST_SET_N_ENTRY(3) },
+    { TEST_SET_N_ENTRY(4) },
+    { TEST_SET_N_ENTRY(5) },
+    { TEST_SET_N_ENTRY(6) },
+    { TEST_SET_N_ENTRY(7) },
+    { TEST_SET_N_ENTRY(8) },
+    { TEST_SET_N_ENTRY(9) },
+    { TEST_SET_N_ENTRY(10) },
+    { TEST_SET_N_ENTRY(11) },
+    { TEST_SET_N_ENTRY(12) },
     { NULL, NULL }
 };

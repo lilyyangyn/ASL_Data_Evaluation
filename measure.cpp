@@ -18,62 +18,6 @@
 #include "exact.h"
 
 
-typedef struct InputData {
-    Matrix x_train;
-    Matrix x_test;
-    Matrix y_train;
-    Matrix y_test;
-
-    InputData(
-            const double* x_train_data, size_t x_train_m, size_t x_train_n,
-            const double* x_test_data, size_t x_test_m, size_t x_test_n,
-            const double* y_train_data, size_t y_train_m, size_t y_train_n,
-            const double* y_test_data, size_t y_test_m, size_t y_test_n) :
-            x_train(x_train_data, x_train_m, x_train_n),
-            x_test(x_test_data, x_test_m, x_test_n),
-            y_train(y_train_data, y_train_m, y_train_n),
-            y_test(y_test_data, y_test_m, y_test_n) {}
-} InputData;
-
-static std::vector<double> read_csv(const std::filesystem::path& path, size_t& M, size_t& N) {
-    std::vector<double> data;
-    lazycsv::parser<lazycsv::mmap_source, lazycsv::has_header<false>> p {path.string()};
-    M = 0;
-    N = 0;
-
-    for (const auto row : p) {
-        M++;
-        N = 0;
-        for (const auto cell : row) {
-            N++;
-            auto it = cell.raw();
-            data.push_back(std::stod(std::string(it)));
-        }
-    }
-
-    return data;
-}
-
-static std::unique_ptr<InputData> load_data(const std::filesystem::path& input_directory) {
-    size_t x_train_m, x_train_n, x_test_m, x_test_n, y_train_m, y_train_n, y_test_m, y_test_n;
-
-    auto x_train = read_csv(input_directory / "x_train.csv", x_train_m, x_train_n);
-    auto x_test = read_csv(input_directory / "x_test.csv", x_test_m, x_test_n);
-    auto y_train = read_csv(input_directory / "y_train.csv", y_train_m, y_train_n);
-    auto y_test = read_csv(input_directory / "y_test.csv", y_test_m, y_test_n);
-
-    assert(x_train_n * x_train_m == x_train.size());
-    assert(x_test_n * x_test_m == x_test.size());
-    assert(y_train_n * y_train_m == y_train.size());
-    assert(y_test_n * y_test_m == y_test.size());
-
-    return std::make_unique<InputData>(
-            &x_train[0], x_train_m, x_train_n,
-            &x_test[0], x_test_m, x_test_n,
-            &y_train[0], y_train_m, y_train_n,
-            &y_test[0], y_test_m, y_test_n);
-}
-
 // a = np.array([[0.47069075, 0.06548475],
 //     [0.12246441, 0.57838926],
 //     [0.98473347, 0.55588644]])
@@ -102,7 +46,7 @@ int main(int argc, char** argv) {
         exit(-1);
     }
     auto verbose = p.get<bool>("-v");
-    auto data = load_data(p.get<std::string>("-i"));
+    auto data = load_exact_data(p.get<std::string>("-i"));
     Matrix gt(data->x_test.getM(), data->x_train.getM());
     Matrix sp(gt.getM(), gt.getN());
     std::vector<double> mid;

@@ -3,7 +3,10 @@
 #include <cstdint>
 #include <cstring>
 #include <cstdio>
-
+#include <vector>
+#include <filesystem>
+#include "lazycsv.hpp"
+#include <assert.h>
 // A mxn matrix
 // Simple wrapper, no check and easy to overflow, be cautious
 class Matrix {
@@ -20,6 +23,11 @@ public:
 
     Matrix(const double* d, uint64_t vm, uint64_t vn) : Matrix(vm, vn) {
         memcpy(this->val, d, sizeof(double) * vn * vm);
+    }
+
+    Matrix(const std::vector<double>& d, uint64_t vm, uint64_t vn) : Matrix(vm, vn) {
+        assert(d.size() >= vm * vn);
+        memcpy(this->val, &d[0], sizeof(double) * vn * vm);
     }
 
     Matrix(const Matrix&) = delete;
@@ -63,3 +71,22 @@ public:
         printf("--------\n");
     }
 };
+
+static inline std::vector<double> read_csv(const std::filesystem::path& path, size_t& M, size_t& N) {
+    std::vector<double> data;
+    lazycsv::parser<lazycsv::mmap_source, lazycsv::has_header<false>> p {path.string()};
+    M = 0;
+    N = 0;
+
+    for (const auto row : p) {
+        M++;
+        N = 0;
+        for (const auto cell : row) {
+            N++;
+            auto it = cell.raw();
+            data.push_back(std::stod(std::string(it)));
+        }
+    }
+
+    return data;
+}
