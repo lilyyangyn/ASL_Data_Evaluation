@@ -5,6 +5,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <assert.h>
 
 
 const double eps = 1e-6;
