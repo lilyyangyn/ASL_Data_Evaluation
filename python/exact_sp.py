@@ -3,6 +3,7 @@ import csv
 import sys
 from pathlib import Path
 
+
 def get_true_KNN(x_trn, x_tst):
     N = x_trn.shape[0]
     N_tst = x_tst.shape[0]
@@ -13,7 +14,13 @@ def get_true_KNN(x_trn, x_tst):
         for i_trn in range(N):
             dist_gt[i_trn] = np.linalg.norm(x_trn[i_trn, :] - x_tst[i_tst, :], 2)
         # print(dist_gt)
-        x_tst_knn_gt[i_tst, :] = np.argsort(dist_gt)
+        sorted = np.argsort(dist_gt)
+        x_tst_knn_gt[i_tst, :] = sorted
+
+        # s = f"{i_tst}:"
+        # for it in sorted.flat:
+        #     s += f"{it} "
+        # print(s, file=sys.stderr)
     return x_tst_knn_gt.astype(int)
 
 
@@ -65,8 +72,8 @@ if __name__ == "__main__":
     y_train = y_train.flatten()
     gt = get_true_KNN(x_train, x_test)
     print(f"gt={gt}")
-    np.savetxt(data_path / "py_gt.csv", gt, delimiter=",", fmt="%.08f")
+    np.savetxt(data_path / "knn_gt.csv", gt, delimiter=",", fmt="%.08f")
 
     l = compute_single_unweighted_knn_class_shapley(x_train, y_train, gt, y_test, 1)
     print(f"l={l}")
-    np.savetxt(data_path / "py_sp.csv", l, delimiter=",", fmt="%.08f")
+    np.savetxt(data_path / "sp_gt.csv", l, delimiter=",", fmt="%.08f")
