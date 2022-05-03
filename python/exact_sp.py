@@ -1,7 +1,8 @@
 import numpy as np
 import csv
-import sys
 from pathlib import Path
+import argparse
+import os
 
 
 def get_true_KNN(x_trn, x_tst):
@@ -63,17 +64,48 @@ def read_data(d: Path):
     return x_test, x_train, y_test, y_train
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(f"{sys.argv[0]} [path to data directory]")
-        exit(-1)
-    data_path = Path(sys.argv[1])
-    x_test, x_train, y_test, y_train = read_data(data_path)
-    y_test = y_test.flatten()
-    y_train = y_train.flatten()
+    parser = argparse.ArgumentParser(description='Generate data.')
+    parser.add_argument('data_path', help='Path to data directory.')
+    
+    parser.add_argument('--sizes', metavar='N', type=int, nargs=3,
+                    help='Size of the matrix: train_m, test_m, x_n')
+
+    args = parser.parse_args()
+    data_path = Path(args.data_path)
+    # print(args.data_path)
+    # print(args.sizes)
+
+    if args.sizes != None:
+        n1 = args.sizes[0]
+        n2 = args.sizes[1]
+        n = args.sizes[2]
+        x_train = np.ndarray(shape=(n1, n), dtype=float, buffer=np.random.uniform(0,50,[n1*n]))
+        x_test = np.ndarray(shape=(n2, n), dtype=float, buffer=np.random.uniform(0,50,[n2*n]))
+        y_train = np.random.uniform(0,100,[n1])
+        y_test = np.random.uniform(0,100,[n2])
+
+        if not os.path.exists(data_path):
+            os.makedirs(data_path)
+
+        with open(data_path / "info.txt", "a") as f:
+            f.write("x_train:    {}, {}\n".format(n1, n))
+            f.write("x_test:     {}, {}\n".format(n2, n))
+            f.write("y_train:    {}, {}\n".format(1, n1))
+            f.write("y_test:     {}, {}\n".format(1, n2))
+
+        np.savetxt(data_path / "x_train.csv", x_train, delimiter=", ", fmt="%.08f")
+        np.savetxt(data_path / "x_test.csv", x_test, delimiter=", ", fmt="%.08f")
+        np.savetxt(data_path / "y_train.csv", np.atleast_2d(y_train), delimiter=", ", fmt="%.08f")
+        np.savetxt(data_path / "y_test.csv", np.atleast_2d(y_test), delimiter=", ", fmt="%.08f")
+    else:
+        x_test, x_train, y_test, y_train = read_data(data_path)
+        y_test = y_test.flatten()
+        y_train = y_train.flatten()
+    
     gt = get_true_KNN(x_train, x_test)
     print(f"gt={gt}")
-    np.savetxt(data_path / "knn_gt.csv", gt, delimiter=",", fmt="%.08f")
+    np.savetxt(data_path / "knn_gt.csv", gt, delimiter=", ", fmt="%.08f")
 
     l = compute_single_unweighted_knn_class_shapley(x_train, y_train, gt, y_test, 1)
     print(f"l={l}")
-    np.savetxt(data_path / "sp_gt.csv", l, delimiter=",", fmt="%.08f")
+    np.savetxt(data_path / "sp_gt.csv", l, delimiter=", ", fmt="%.08f")
