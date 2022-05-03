@@ -1,0 +1,4 @@
+x_train:    512, 1000
+x_test:     2, 1000
+y_train:    1, 512
+y_test:     1, 2
