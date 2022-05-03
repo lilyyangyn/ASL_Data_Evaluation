@@ -18,7 +18,7 @@ static std::vector<size_t> argsort(const std::vector<double>& mid) {
         v[i] = i;
     }
 
-    std::sort(v.begin(), v.end(), [&mid](const size_t& lhs, const size_t& rhs){
+    std::stable_sort(v.begin(), v.end(), [&mid](const size_t& lhs, const size_t& rhs){
         return mid[lhs] < mid[rhs];
     });
 

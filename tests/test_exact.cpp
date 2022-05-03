@@ -51,7 +51,7 @@ static void write_csv(const std::filesystem::path& path, Matrix* matrix) {
     // double* val = matrix->getVal();
     for (size_t m = 0; m < M; m++) {
         for (size_t n = 0; n < N - 1; n++) {
-            out << std::fixed << std::setprecision(8) << matrix->getElement(m, n) << ", ";
+            out << std::fixed << std::setprecision(8) << matrix->getElement(m, n) << ",";
         }
         out << std::fixed << std::setprecision(8) << matrix->getElement(m, N-1);
         if (m != M-1) {
