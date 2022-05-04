@@ -97,10 +97,10 @@ if __name__ == "__main__":
         np.savetxt(data_path / "x_test.csv", x_test, delimiter=", ", fmt="%.08f")
         np.savetxt(data_path / "y_train.csv", np.atleast_2d(y_train), delimiter=", ", fmt="%.08f")
         np.savetxt(data_path / "y_test.csv", np.atleast_2d(y_test), delimiter=", ", fmt="%.08f")
-    else:
-        x_test, x_train, y_test, y_train = read_data(data_path)
-        y_test = y_test.flatten()
-        y_train = y_train.flatten()
+    
+    x_test, x_train, y_test, y_train = read_data(data_path)
+    y_test = y_test.flatten()
+    y_train = y_train.flatten()
     
     gt = get_true_KNN(x_train, x_test)
     print(f"gt={gt}")
