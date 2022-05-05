@@ -1,0 +1,4 @@
+x_train:    100, 1024
+x_test:     2, 1024
+y_train:    1, 100
+y_test:     1, 2
