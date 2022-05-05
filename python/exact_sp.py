@@ -82,7 +82,14 @@ if __name__ == "__main__":
         x_train = np.ndarray(shape=(n1, n), dtype=float, buffer=np.random.uniform(0,50,[n1*n]))
         x_test = np.ndarray(shape=(n2, n), dtype=float, buffer=np.random.uniform(0,50,[n2*n]))
         y_train = np.random.uniform(0,100,[n1])
-        y_test = np.random.uniform(0,100,[n2])
+        y_test_idx = np.random.randint(0, 2*n1, [n2])
+        y_test = np.zeros(shape=(n2))
+        for i in range(n2):
+            if y_test_idx[i] > n1 - 1:
+                y_test[i] = np.random.uniform(0,100)
+            else:
+                y_test[i] = y_train[y_test_idx[i]]
+        # y_test = np.random.uniform(0,100,[n2])
 
         if not os.path.exists(data_path):
             os.makedirs(data_path)
