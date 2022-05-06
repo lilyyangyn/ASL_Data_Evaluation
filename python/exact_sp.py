@@ -80,15 +80,20 @@ if __name__ == "__main__":
         n2 = args.sizes[1]
         n = args.sizes[2]
         x_train = np.ndarray(shape=(n1, n), dtype=float, buffer=np.random.uniform(0,50,[n1*n]))
-        x_test = np.ndarray(shape=(n2, n), dtype=float, buffer=np.random.uniform(0,50,[n2*n]))
+        # x_test = np.ndarray(shape=(n2, n), dtype=float, buffer=np.random.uniform(0,50,[n2*n]))
+        x_test = np.zeros(shape=(n2, n), dtype=float)
         y_train = np.random.uniform(0,100,[n1])
-        y_test_idx = np.random.randint(0, 2*n1, [n2])
+        test_idx = np.random.randint(0, 2*n1, [n2])
         y_test = np.zeros(shape=(n2))
         for i in range(n2):
-            if y_test_idx[i] > n1 - 1:
+            if test_idx[i] > n1 - 1:
+                # np.vstack([x_test, np.random.uniform(0,100,[n])])
+                x_test[i] = np.random.uniform(0,50,[n])
                 y_test[i] = np.random.uniform(0,100)
             else:
-                y_test[i] = y_train[y_test_idx[i]]
+                # np.vstack([x_test, x_train[test_idx[i]]])
+                x_test[i] = x_train[test_idx[i]]
+                y_test[i] = y_train[test_idx[i]]
         # y_test = np.random.uniform(0,100,[n2])
 
         if not os.path.exists(data_path):
