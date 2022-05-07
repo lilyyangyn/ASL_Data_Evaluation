@@ -83,7 +83,7 @@ if __name__ == "__main__":
         # x_test = np.ndarray(shape=(n2, n), dtype=float, buffer=np.random.uniform(0,50,[n2*n]))
         x_test = np.zeros(shape=(n2, n), dtype=float)
         y_train = np.random.uniform(0,100,[n1])
-        test_idx = np.random.randint(0, 2*n1, [n2])
+        test_idx = np.random.randint(0, n1+1, [n2])
         y_test = np.zeros(shape=(n2))
         for i in range(n2):
             if test_idx[i] > n1 - 1:
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         if not os.path.exists(data_path):
             os.makedirs(data_path)
 
-        with open(data_path / "info.txt", "a") as f:
+        with open(data_path / "info.txt", "w") as f:
             f.write("x_train:    {}, {}\n".format(n1, n))
             f.write("x_test:     {}, {}\n".format(n2, n))
             f.write("y_train:    {}, {}\n".format(1, n1))

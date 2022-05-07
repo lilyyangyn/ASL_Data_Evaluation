@@ -7,6 +7,7 @@
 #include <filesystem>
 #include "lazycsv.hpp"
 #include <assert.h>
+#include <fstream>
 // A mxn matrix
 // Simple wrapper, no check and easy to overflow, be cautious
 class Matrix {
@@ -89,4 +90,21 @@ static inline std::vector<double> read_csv(const std::filesystem::path& path, si
     }
 
     return data;
+}
+
+static void write_csv(const std::filesystem::path& path, Matrix* matrix) {
+    std::ofstream out(path);
+
+    size_t M = matrix->getM();
+    size_t N = matrix->getN();
+    // double* val = matrix->getVal();
+    for (size_t m = 0; m < M; m++) {
+        for (size_t n = 0; n < N - 1; n++) {
+            out << std::fixed << std::setprecision(8) << matrix->getElement(m, n) << ",";
+        }
+        out << std::fixed << std::setprecision(8) << matrix->getElement(m, N-1);
+        if (m != M-1) {
+            out << "\n";
+        }
+    }
 }

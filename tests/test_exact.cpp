@@ -4,7 +4,6 @@
 #include "matrix.h"
 #include <cmath>
 #include <filesystem>
-#include <fstream>
 #include <assert.h>
 
 
@@ -41,24 +40,6 @@ static void cmp_matrix(const Matrix* a, const Matrix* b) {
             TEST_MSG("Wrong (%zd, %zd): %f != (%zd, %zd) %f\n", i, j, a->getElement(i, j), i, j, b->getElement(i, j));
         }
     }
-}
-
-static void write_csv(const std::filesystem::path& path, Matrix* matrix) {
-    std::ofstream out(path);
-
-    size_t M = matrix->getM();
-    size_t N = matrix->getN();
-    // double* val = matrix->getVal();
-    for (size_t m = 0; m < M; m++) {
-        for (size_t n = 0; n < N - 1; n++) {
-            out << std::fixed << std::setprecision(8) << matrix->getElement(m, n) << ",";
-        }
-        out << std::fixed << std::setprecision(8) << matrix->getElement(m, N-1);
-        if (m != M-1) {
-            out << "\n";
-        }
-    }
-
 }
 
 static void test_simple_array() {
@@ -149,18 +130,18 @@ TEST_SET_N(12)
 
 TEST_LIST = {
     { "test_simple_array", test_simple_array },
-    { TEST_SET_N_ENTRY(0) },
-    { TEST_SET_N_ENTRY(1) },
-    { TEST_SET_N_ENTRY(2) },
-    { TEST_SET_N_ENTRY(3) },
-    { TEST_SET_N_ENTRY(4) },
-    { TEST_SET_N_ENTRY(5) },
-    { TEST_SET_N_ENTRY(6) },
-    { TEST_SET_N_ENTRY(7) },
-    { TEST_SET_N_ENTRY(8) },
-    { TEST_SET_N_ENTRY(9) },
-    { TEST_SET_N_ENTRY(10) },
-    { TEST_SET_N_ENTRY(11) },
-    { TEST_SET_N_ENTRY(12) },
+    // { TEST_SET_N_ENTRY(0) },
+    // { TEST_SET_N_ENTRY(1) },
+    // { TEST_SET_N_ENTRY(2) },
+    // { TEST_SET_N_ENTRY(3) },
+    // { TEST_SET_N_ENTRY(4) },
+    // { TEST_SET_N_ENTRY(5) },
+    // { TEST_SET_N_ENTRY(6) },
+    // { TEST_SET_N_ENTRY(7) },
+    // { TEST_SET_N_ENTRY(8) },
+    // { TEST_SET_N_ENTRY(9) },
+    // { TEST_SET_N_ENTRY(10) },
+    // { TEST_SET_N_ENTRY(11) },
+    // { TEST_SET_N_ENTRY(12) },
     { NULL, NULL }
 };
