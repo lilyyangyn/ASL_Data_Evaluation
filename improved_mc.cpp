@@ -20,6 +20,7 @@ void random_permute(Matrix* permutations, uint64_t x_train_M, uint64_t num_permu
     assert(permutations_N == x_train_M);
 
     std::vector<uint64_t> mid;
+    mid.resize(x_train_M);
     for (size_t i = 0; i < x_train_M; i++) {
         mid[i] = i;
     }
