@@ -55,10 +55,14 @@ static void test_simple_array() {
     Matrix permutations(num_permutes, 4);
     Matrix point_dists(3, 4);
     Matrix sp(3, 4);
-    
-    random_permute(&permutations, x_train.getM(), num_permutes);
-    point_distances(&x_train, &x_test, &point_dists);
-    improved_single_unweighted_knn_class_shapley(&y_train, &y_test, &permutations, &point_dists, K, num_permutes, &sp);
+
+    std::vector<uint64_t> mid1(4);
+    std::vector<double> mid2(4);
+    Matrix phi(num_permutes, 4);
+    FixedSizeKNNHeap H(K); 
+
+    compute_sp_improved_mc(&x_train, &x_test, &y_train, &y_test, K, num_permutes, 
+        &permutations, &point_dists, &sp, mid1, mid2, &phi, &H);
     
     cmp(&sp, (const double*)a5);
 
