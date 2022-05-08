@@ -33,7 +33,9 @@ int main(int argc, char** argv) {
     p.add_argument("-j", "--json").default_value(false).implicit_value(true).help("Json output");
     p.add_argument("-r", "--repeat").default_value(1UL).scan<'u', size_t>().help("Repeat times");
     p.add_argument("-v", "--verbose").default_value(false).implicit_value(true).help("Print input data and result");
+    p.add_argument("-l", "--list").default_value(false).implicit_value(true).help("List all compiled tests");
     p.add_argument("-i", "--input").required().help("The input directory");
+    p.add_argument("tests").default_value(std::vector<std::string>({})).remaining();
 
     try {
         p.parse_args(argc, argv);
@@ -48,6 +50,8 @@ int main(int argc, char** argv) {
     }
     auto verbose = p.get<bool>("-v");
     auto data = load_exact_data(p.get<std::string>("-i"));
+    auto list = p.get<bool>("-l");
+    auto tests = p.get<std::vector<std::string>>("tests");
     Matrix gt(data->x_test.getM(), data->x_train.getM());
     Matrix sp(gt.getM(), gt.getN());
     std::vector<double> mid;
@@ -62,10 +66,15 @@ int main(int argc, char** argv) {
         data->y_test.pprint("y_test");
     }
 
-    //benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
+    benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
     benchmark::Register("improved_mc", std::bind(compute_sp_improved_mc, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, 1, &permutations, &point_dists, &sp));
 
-    benchmark::Run(p.get<bool>("-j"), p.get<size_t>("-r"));
+
+    if (list) {
+        benchmark::List();
+    } else {
+        benchmark::Run(p.get<bool>("-j"), p.get<size_t>("-r"), tests);
+    }
 
     if (verbose) {
         gt.pprint("gt");
