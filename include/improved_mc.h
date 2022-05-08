@@ -71,3 +71,8 @@ void improved_single_unweighted_knn_class_shapley(
     const Matrix* y_train, const Matrix* y_test,
     const Matrix* permutations, const Matrix* distances, 
     uint64_t K, uint64_t num_permute, Matrix* result);
+
+void compute_sp_improved_mc(
+    const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
+    const Matrix* y_test, uint64_t K, uint64_t num_permutes, Matrix* permutations, Matrix* point_dists, 
+    Matrix* sp);
