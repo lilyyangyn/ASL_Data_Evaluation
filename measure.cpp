@@ -16,6 +16,7 @@
 #include "benchmark.h"
 #include "matrix.h"
 #include "exact.h"
+#include "improved_mc.h"
 
 
 // a = np.array([[0.47069075, 0.06548475],
@@ -51,6 +52,8 @@ int main(int argc, char** argv) {
     Matrix sp(gt.getM(), gt.getN());
     std::vector<double> mid;
     mid.resize(data->x_train.getM());
+    Matrix permutations(1, data->x_train.getM());
+    Matrix point_dists(gt.getM(), gt.getN());
 
     if (verbose) {
         data->x_train.pprint("x_train");
@@ -59,7 +62,8 @@ int main(int argc, char** argv) {
         data->y_test.pprint("y_test");
     }
 
-    benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
+    //benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
+    benchmark::Register("improved_mc", std::bind(compute_sp_improved_mc, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, 1, &permutations, &point_dists, &sp));
 
     benchmark::Run(p.get<bool>("-j"), p.get<size_t>("-r"));
 
