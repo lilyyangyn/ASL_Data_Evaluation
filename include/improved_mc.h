@@ -55,6 +55,14 @@ class FixedSizeKNNHeap {
             return myheap;
         }
 
+        uint64_t getMaxSize() {
+            return max_size;
+        }
+
+        void popAll() {
+            myheap.clear();
+        }
+
     
     protected:
         uint64_t max_size;
@@ -63,16 +71,17 @@ class FixedSizeKNNHeap {
         std::less<KNNPoint> cmp;
 };
 
-void random_permute(Matrix* permutations, uint64_t x_train_M, uint64_t num_permute);
+void random_permute(Matrix* permutations, uint64_t x_train_M, uint64_t num_permute, std::vector<uint64_t>& mid);
 
-void point_distances(const Matrix* x_train, const Matrix* x_test, Matrix *result);
+void point_distances(const Matrix* x_train, const Matrix* x_test, Matrix *result, std::vector<double>& mid);
 
 void improved_single_unweighted_knn_class_shapley(
     const Matrix* y_train, const Matrix* y_test,
     const Matrix* permutations, const Matrix* distances, 
-    uint64_t K, uint64_t num_permute, Matrix* result);
+    uint64_t K, uint64_t num_permute, Matrix* result, 
+    Matrix* phi, FixedSizeKNNHeap* H);
 
 void compute_sp_improved_mc(
     const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
     const Matrix* y_test, uint64_t K, uint64_t num_permutes, Matrix* permutations, Matrix* point_dists, 
-    Matrix* sp);
+    Matrix* sp, std::vector<uint64_t>& mid1, std::vector<double>& mid2, Matrix* phi, FixedSizeKNNHeap* H);

@@ -58,6 +58,12 @@ int main(int argc, char** argv) {
     mid.resize(data->x_train.getM());
     Matrix permutations(1, data->x_train.getM());
     Matrix point_dists(gt.getM(), gt.getN());
+    std::vector<uint64_t> mid1;
+    mid1.resize(data->x_train.getM());
+    std::vector<double> mid2;
+    mid2.resize(data->x_train.getM());
+    Matrix phi(1, data->x_train.getM());
+    FixedSizeKNNHeap H(1); 
 
     if (verbose) {
         data->x_train.pprint("x_train");
@@ -67,7 +73,7 @@ int main(int argc, char** argv) {
     }
 
     benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
-    benchmark::Register("improved_mc", std::bind(compute_sp_improved_mc, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, 1, &permutations, &point_dists, &sp));
+    benchmark::Register("improved_mc", std::bind(compute_sp_improved_mc, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, 1, &permutations, &point_dists, &sp, mid1, mid2, &phi, &H));
 
 
     if (list) {

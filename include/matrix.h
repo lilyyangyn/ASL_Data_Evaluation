@@ -58,6 +58,11 @@ public:
         return this->m;
     }
 
+    void resetVal() {
+        size_t sz = sizeof(double) * n * m;
+        memset(this->val, 0, sz);
+    }
+
     void pprint(const char* matrix_name = nullptr) const {
         if (matrix_name) {
             printf("%s:\n", matrix_name);
