@@ -21,7 +21,7 @@ target_include_directories(exact PUBLIC include)
 target_include_directories(improved_mc PUBLIC include)
 
 target_compile_options(measure PRIVATE -march=native)
-target_link_libraries(measure PRIVATE benchmark exact)
+target_link_libraries(measure PRIVATE benchmark exact improved_mc)
 target_link_libraries(test_exact PRIVATE exact)
 target_compile_definitions(test_exact PRIVATE TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/tests")
 target_link_libraries(test_improved_mc PRIVATE improved_mc)
