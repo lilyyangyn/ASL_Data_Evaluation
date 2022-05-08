@@ -125,23 +125,43 @@ TEST_SET_N(9)
 TEST_SET_N(10)
 TEST_SET_N(11)
 TEST_SET_N(12)
+TEST_SET_N(13)
+TEST_SET_N(14)
+TEST_SET_N(15)
+TEST_SET_N(16)
+TEST_SET_N(17)
+TEST_SET_N(18)
+TEST_SET_N(19)
+TEST_SET_N(20)
+TEST_SET_N(21)
+TEST_SET_N(22)
 
 #define TEST_SET_N_ENTRY(N) "test_set_" #N, test_set_##N
 
 TEST_LIST = {
     { "test_simple_array", test_simple_array },
-    // { TEST_SET_N_ENTRY(0) },
-    // { TEST_SET_N_ENTRY(1) },
-    // { TEST_SET_N_ENTRY(2) },
-    // { TEST_SET_N_ENTRY(3) },
-    // { TEST_SET_N_ENTRY(4) },
-    // { TEST_SET_N_ENTRY(5) },
-    // { TEST_SET_N_ENTRY(6) },
-    // { TEST_SET_N_ENTRY(7) },
-    // { TEST_SET_N_ENTRY(8) },
-    // { TEST_SET_N_ENTRY(9) },
-    // { TEST_SET_N_ENTRY(10) },
-    // { TEST_SET_N_ENTRY(11) },
-    // { TEST_SET_N_ENTRY(12) },
+    { TEST_SET_N_ENTRY(0) },
+    { TEST_SET_N_ENTRY(1) },
+    { TEST_SET_N_ENTRY(2) },
+    { TEST_SET_N_ENTRY(3) },
+    { TEST_SET_N_ENTRY(4) },
+    { TEST_SET_N_ENTRY(5) },
+    { TEST_SET_N_ENTRY(6) },
+    { TEST_SET_N_ENTRY(7) },
+    { TEST_SET_N_ENTRY(8) },
+    { TEST_SET_N_ENTRY(9) },
+    { TEST_SET_N_ENTRY(10) },
+    { TEST_SET_N_ENTRY(11) },
+    { TEST_SET_N_ENTRY(12) },
+    { TEST_SET_N_ENTRY(13) },
+    { TEST_SET_N_ENTRY(14) },
+    { TEST_SET_N_ENTRY(15) },
+    { TEST_SET_N_ENTRY(16) },
+    { TEST_SET_N_ENTRY(17) },
+    { TEST_SET_N_ENTRY(18) },
+    { TEST_SET_N_ENTRY(19) },
+    { TEST_SET_N_ENTRY(20) },
+    { TEST_SET_N_ENTRY(21) },
+    { TEST_SET_N_ENTRY(22) },
     { NULL, NULL }
 };
