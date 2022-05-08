@@ -100,3 +100,12 @@ void improved_single_unweighted_knn_class_shapley(
         } 
     }
 }
+
+void compute_sp_improved_mc(
+    const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
+    const Matrix* y_test, uint64_t K, uint64_t num_permutes, Matrix* permutations, Matrix* point_dists, 
+    Matrix* sp) {
+    random_permute(permutations, x_train->getM(), num_permutes);
+    point_distances(x_train, x_test, point_dists);
+    improved_single_unweighted_knn_class_shapley(y_train, y_test, permutations, point_dists, K, num_permutes, sp);
+}
