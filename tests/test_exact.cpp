@@ -17,7 +17,7 @@ static void cmp(const Matrix* m, const double* v) {
     for (size_t i = 0 ; i < M; i ++) {
         for (size_t j = 0; j < N; j ++) {
             TEST_CHECK(std::fabs(m->getElement(i, j) - v[i * N + j]) < eps);
-            TEST_MSG("Wrong (%zd, %zd): %f != %f", i, j, m->getElement(i, j), v[i*N + j]);
+            TEST_MSG("Wrong (%zd, %zd): %f != %f", i, j, double(m->getElement(i, j)), v[i*N + j]);
         }
     }
 }
@@ -37,7 +37,7 @@ static void cmp_matrix(const Matrix* a, const Matrix* b) {
             // printf("%lu, %lu\n", i, j);
             // printf("%f, %f\n", a->getElement(i, j), b->getElement(i, j));
             TEST_CHECK(std::fabs(a->getElement(i, j) - b->getElement(i, j)) < eps);
-            TEST_MSG("Wrong (%zd, %zd): %f != (%zd, %zd) %f\n", i, j, a->getElement(i, j), i, j, b->getElement(i, j));
+            TEST_MSG("Wrong (%zd, %zd): %f != (%zd, %zd) %f\n", i, j, double(a->getElement(i, j)), i, j, double(b->getElement(i, j)));
         }
     }
 }

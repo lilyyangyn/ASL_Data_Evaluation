@@ -5,6 +5,7 @@
 #include <vector>
 #include <x86intrin.h>
 #include <string>
+#include "flops.h"
 
 namespace benchmark {
 
@@ -12,6 +13,9 @@ typedef struct Benchmark {
     const char* name;
     std::function<void()> func;
     double result;
+#ifdef FLOPS
+    uint64_t flops;
+#endif
 
     Benchmark(const char* n, std::function<void()> f, double r) : name(n), func(f), result(r) {}
 } Benchmark;
@@ -60,16 +64,26 @@ void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests)
 
     for (auto& v : run) {
         v.result = 0;
+#ifdef FLOPS
+        getCounter()->Reset();
+#endif
         for (size_t i = 0; i < repeat; i ++ ) {
+
             v.result += Measure(v) / double(repeat);
         }
+#ifdef FLOPS
+        v.flops = getCounter()->Get();
+#endif
     }
 
     if (json_output) {
         printf("{\n");
         for (auto it = run.begin(); it != run.end(); it ++) {
             printf("  \"%s\": {\n", it->name);
-            printf("    \"cycles\": \"%f\"\n", it->result);
+            printf("    \"cycles\": \"%f\",\n", it->result);
+#ifdef FLOPS
+            printf("    \"flops\": \"%ld\"\n", it->flops);
+#endif
             printf("  }");
 
             if (it + 1 != run.end()) {
@@ -81,7 +95,11 @@ void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests)
         printf("}\n");
     } else {
         for (auto& v : run) {
+#ifdef FLOPS
+            printf("%s: %f cycles (repeat %zd times) %ld flops\n", v.name, v.result, repeat, v.flops);
+#else
             printf("%s: %f cycles (repeat %zd times)\n", v.name, v.result, repeat);
+#endif
         }
     }
 }

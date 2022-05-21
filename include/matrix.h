@@ -8,6 +8,71 @@
 #include "lazycsv.hpp"
 #include <assert.h>
 #include <fstream>
+#include "flops.h"
+
+class DoubleProxy {
+    double d;
+
+public:
+    DoubleProxy(double val) :  d(val) {}
+
+    double get() {
+        return d;
+    }
+
+    operator double() {
+        return this->get();
+    }
+
+    DoubleProxy& operator*(const DoubleProxy& other) {
+        return this->operator*(other.d);
+    }
+
+    DoubleProxy& operator*(double other) {
+        getCounter()->Increase(1);
+        d *= other;
+        return *this;
+    }
+
+    DoubleProxy& operator+(const DoubleProxy& other) {
+        return this->operator+(other.d);
+    }
+
+    DoubleProxy& operator+(double other) {
+        getCounter()->Increase(1);
+        d += other;
+        return *this;
+    }
+
+    DoubleProxy& operator-() {
+        // Count this???
+        getCounter()->Increase(1);
+        d = -d;
+        return *this;
+    }
+
+    DoubleProxy& operator-(const DoubleProxy& other) {
+        return this->operator-(other.d);
+    }
+
+    DoubleProxy& operator-(double other) {
+        getCounter()->Increase(1);
+        d -= other;
+        return *this;
+    }
+
+    DoubleProxy& operator/(const DoubleProxy& other) {
+        return this->operator/(other.d);
+    }
+
+    DoubleProxy& operator/(double other) {
+        getCounter()->Increase(1);
+        d /= other;
+        return *this;
+    }
+
+};
+
 // A mxn matrix
 // Simple wrapper, no check and easy to overflow, be cautious
 class Matrix {
@@ -42,6 +107,7 @@ public:
         return this->val;
     }
 
+#ifndef FLOPS
     double getElement(size_t i, size_t j) const {
         return this->val[i * this->n + j];
     }
@@ -49,7 +115,19 @@ public:
     void setElement(size_t i, size_t j, double d) {
         this->val[i*this->n + j] = d;
     }
+#else
+    DoubleProxy getElement(size_t i, size_t j) const {
+        return DoubleProxy(this->val[i * this->n + j]);
+    }
 
+    void setElement(size_t i, size_t j, DoubleProxy d) {
+        this->val[i*this->n + j] = d.get();
+    }
+
+    void setElement(size_t i, size_t j, double d) {
+        this->val[i*this->n + j] = d;
+    }
+#endif
     size_t getN() const {
         return this->n;
     }
@@ -70,7 +148,7 @@ public:
         printf("--------[%ldx%ld]\n", this->m, this->n);
         for (size_t i = 0; i < this->m; i ++) {
             for (size_t j = 0; j < this->n; j ++) {
-                printf("%f ", this->getElement(i, j));
+                printf("%f ", double(this->getElement(i, j)));
             }
             printf("\n");
         }

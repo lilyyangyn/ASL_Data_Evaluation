@@ -13,7 +13,7 @@ static void cmp(const Matrix* m, const double* v) {
     for (size_t i = 0 ; i < M; i ++) {
         for (size_t j = 0; j < N; j ++) {
             TEST_CHECK(std::fabs(m->getElement(i, j) - v[i * N + j]) < eps);
-            TEST_MSG("Wrong (%zd, %zd): %f != %f", i, j, m->getElement(i, j), v[i*N + j]);
+            TEST_MSG("Wrong (%zd, %zd): %f != %f", i, j, double(m->getElement(i, j)), v[i*N + j]);
         }
     }
 }
