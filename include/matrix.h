@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <fstream>
 #include "flops.h"
-
+#include <cmath>
 class DoubleProxy {
     double d;
 
@@ -24,54 +24,251 @@ public:
         return this->get();
     }
 
-    DoubleProxy& operator*(const DoubleProxy& other) {
-        return this->operator*(other.d);
+    // operator bool() {
+    //     const double eps = 1e-6;
+
+    //     return !(fabs(this->get()) < eps);
+    // }
+
+    operator size_t() {
+        return size_t(this->get());
     }
 
-    DoubleProxy& operator*(double other) {
+
+    const double mult(double other) const {
         getCounter()->Increase(1);
-        d *= other;
+        return this->d * other;
+    }
+
+    const double add(double other) const {
+        getCounter()->Increase(1);
+        return this->d + other;
+    }
+
+    const double sub(double other) const {
+        getCounter()->Increase(1);
+        return this->d - other;
+    }
+
+    const double div(double other) const {
+        getCounter()->Increase(1);
+        return this->d / other;
+    }
+
+    const bool eq(const double other) const {
+        getCounter()->Increase(1);
+        return this->d == other;
+    }
+
+    const bool neq(double other) const {
+        getCounter()->Increase(1);
+        return this->d != other;
+    }
+
+    const bool lt(const double other) const {
+        getCounter()->Increase(1);
+        return this->d < other;
+    }
+
+    const bool gt(const double other) const {
+        getCounter()->Increase(1);
+        return this->d > other;
+    }
+
+    const bool le(const double other) const {
+        getCounter()->Increase(1);
+        return this->d <= other;
+    }
+
+    const bool ge(const double other) const {
+        getCounter()->Increase(1);
+        return this->d >= other;
+    }
+
+    DoubleProxy& operator*=(const DoubleProxy& other) {
+        return this->operator*=(other.d);
+    }
+
+    DoubleProxy& operator*=(double other) {
+        this->d = this->mult(other);
         return *this;
     }
 
-    DoubleProxy& operator+(const DoubleProxy& other) {
-        return this->operator+(other.d);
+    DoubleProxy& operator+=(const DoubleProxy& other) {
+        return this->operator+=(other.d);
     }
 
-    DoubleProxy& operator+(double other) {
-        getCounter()->Increase(1);
-        d += other;
+    DoubleProxy& operator+=(double other) {
+        this->d = this->add(other);
         return *this;
     }
 
-    DoubleProxy& operator-() {
-        // Count this???
-        getCounter()->Increase(1);
-        d = -d;
+    DoubleProxy& operator-=(const DoubleProxy& other) {
+        return this->operator-=(other.d);
+    }
+
+    DoubleProxy& operator-=(double other) {
+        this->d = this->sub(other);
         return *this;
     }
 
-    DoubleProxy& operator-(const DoubleProxy& other) {
-        return this->operator-(other.d);
+    DoubleProxy& operator/=(const DoubleProxy& other) {
+        return this->operator/=(other.d);
     }
 
-    DoubleProxy& operator-(double other) {
-        getCounter()->Increase(1);
-        d -= other;
+    DoubleProxy& operator/=(double other) {
+        this->d = this->div(other);
         return *this;
     }
 
-    DoubleProxy& operator/(const DoubleProxy& other) {
-        return this->operator/(other.d);
+    friend bool operator==(const DoubleProxy& lhs, const DoubleProxy& rhs) {
+        return lhs.eq(rhs.d);
     }
 
-    DoubleProxy& operator/(double other) {
-        getCounter()->Increase(1);
-        d /= other;
-        return *this;
+    friend bool operator==(const DoubleProxy& lhs, double rhs) {
+        return lhs == DoubleProxy(rhs);
+    }
+
+    friend bool operator==(double lhs, const DoubleProxy& rhs) {
+        return rhs == DoubleProxy(lhs);
+    }
+
+    friend bool operator!=(const DoubleProxy& lhs, const DoubleProxy& rhs) {
+        return lhs.neq(rhs.d);
+    }
+
+    friend bool operator!=(const DoubleProxy& lhs, double rhs) {
+        return lhs != DoubleProxy(rhs);
+    }
+
+    friend bool operator!=(double lhs, const DoubleProxy& rhs) {
+        return rhs != lhs;
+    }
+
+    friend bool operator>(const DoubleProxy& lhs, const DoubleProxy& rhs) {
+        return lhs.gt(rhs.d);
+    }
+
+    friend bool operator>(const DoubleProxy& lhs, double rhs) {
+        return lhs > DoubleProxy(rhs);
+    }
+
+    friend bool operator>(double lhs, const DoubleProxy& rhs) {
+        return rhs < lhs;
+    }
+
+    friend bool operator<(const DoubleProxy& lhs, const DoubleProxy& rhs) {
+        return rhs > lhs;
+    }
+
+    friend bool operator<(const DoubleProxy& lhs, double rhs) {
+        return lhs < DoubleProxy(rhs);
+    }
+
+    friend bool operator<(double lhs, const DoubleProxy& rhs) {
+        return rhs > lhs;
+    }
+    
+    friend bool operator<=(const DoubleProxy& lhs, const DoubleProxy& rhs) {
+        return !(lhs > rhs);
+    }
+
+    friend bool operator<=(const DoubleProxy& lhs, double rhs) {
+        return !(lhs > DoubleProxy(rhs));
+    }
+
+    friend bool operator<=(double lhs, const DoubleProxy& rhs) {
+        return !(rhs < lhs);
+    }
+
+    friend bool operator>=(const DoubleProxy& lhs, const DoubleProxy& rhs) {
+        return !(lhs < rhs);
+    }
+
+    friend bool operator>=(const DoubleProxy& lhs, double rhs) {
+        return !(lhs < DoubleProxy(rhs));
+    }
+
+    friend bool operator>=(double lhs, const DoubleProxy& rhs) {
+        return !(rhs > lhs);
+    }
+
+    friend DoubleProxy operator+(DoubleProxy l, const DoubleProxy& r) {
+        l += r;
+        return l;
+    }
+
+    friend DoubleProxy operator+(DoubleProxy l, double r) {
+        l += r;
+        return l;
+    }
+
+    friend DoubleProxy operator+(double l, const DoubleProxy& r) {
+        DoubleProxy p(l);
+        p += r;
+        return p;
+    }
+
+    friend double& operator+=(double& l, const DoubleProxy& r) {
+        l = r.add(l);
+        return l;
+    }
+
+    friend DoubleProxy operator-(DoubleProxy l, const DoubleProxy& r) {
+        l -= r;
+        return l;
+    }
+
+    friend DoubleProxy operator-(DoubleProxy l, double r) {
+        l -= r;
+        return l;
+    }
+
+    friend DoubleProxy operator-(double l, const DoubleProxy& r) {
+        DoubleProxy p(l);
+        p -= r;
+        return p;
+    }
+
+
+    friend DoubleProxy operator*(DoubleProxy l, const DoubleProxy& r) {
+        l *= r;
+        return l;
+    }
+
+    friend DoubleProxy operator*(DoubleProxy l, double r) {
+        l *= r;
+        return l;
+    }
+
+    friend DoubleProxy operator*(double l, const DoubleProxy& r) {
+        DoubleProxy p(l);
+        p *= r;
+        return p;
+    }
+
+
+    friend DoubleProxy operator/(DoubleProxy l, const DoubleProxy& r) {
+        l /= r;
+        return l;
+    }
+
+    friend DoubleProxy operator/(DoubleProxy l, double r) {
+        l /= r;
+        return l;
+    }
+
+    friend DoubleProxy operator/(double l, const DoubleProxy& r) {
+        DoubleProxy p(l);
+        p /= r;
+        return p;
     }
 
 };
+
+// DoubleProxy& DoubleProxy::operator+(double d, DoubleProxy& p) {
+//     return p->operator+(d);
+// }
 
 // A mxn matrix
 // Simple wrapper, no check and easy to overflow, be cautious
@@ -183,9 +380,9 @@ static void write_csv(const std::filesystem::path& path, Matrix* matrix) {
     // double* val = matrix->getVal();
     for (size_t m = 0; m < M; m++) {
         for (size_t n = 0; n < N - 1; n++) {
-            out << std::fixed << std::setprecision(8) << matrix->getElement(m, n) << ",";
+            out << std::fixed << std::setprecision(8) << double(matrix->getElement(m, n)) << ",";
         }
-        out << std::fixed << std::setprecision(8) << matrix->getElement(m, N-1);
+        out << std::fixed << std::setprecision(8) << double(matrix->getElement(m, N-1));
         if (m != M-1) {
             out << "\n";
         }
