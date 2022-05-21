@@ -47,10 +47,10 @@ void KNN_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::v
         }
         for (j = 0; j < N1 - 3; j+=4) {
             for (size_t k = 0; k < x_train_N; k ++) {
-                double val = (x_train->getElement(j, k) - x_test->getElement(i, k)); // avx-ed by gcc
-                double val1 = (x_train->getElement(j + 1, k) - x_test->getElement(i, k));
-                double val2 = (x_train->getElement(j + 2, k) - x_test->getElement(i, k));
-                double val3 = (x_train->getElement(j + 3, k) - x_test->getElement(i, k));
+                auto val = (x_train->getElement(j, k) - x_test->getElement(i, k)); // avx-ed by gcc
+                auto val1 = (x_train->getElement(j + 1, k) - x_test->getElement(i, k));
+                auto val2 = (x_train->getElement(j + 2, k) - x_test->getElement(i, k));
+                auto val3 = (x_train->getElement(j + 3, k) - x_test->getElement(i, k));
                 mid[j] += val * val;
                 mid[j + 1] += val1 * val1;
                 mid[j + 2] += val2 * val2;
@@ -63,7 +63,7 @@ void KNN_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::v
         }
         for (; j < N1; j++) {
             for (size_t k = 0; k < x_train_N; k ++) {
-                double val = (x_train->getElement(j, k) - x_test->getElement(i, k));
+                auto val = (x_train->getElement(j, k) - x_test->getElement(i, k));
                 mid[j] +=  val * val;
             }
             mid[j] = std::sqrt(mid[j]);
