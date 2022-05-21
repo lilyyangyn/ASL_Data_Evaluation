@@ -20,6 +20,9 @@ static std::vector<size_t> argsort(const std::vector<double>& mid) {
     }
 
     std::stable_sort(v.begin(), v.end(), [&mid](const size_t& lhs, const size_t& rhs){
+#ifdef FLOPS
+        getCounter()->Increase(1);
+#endif
         return mid[lhs] < mid[rhs];
     });
 
