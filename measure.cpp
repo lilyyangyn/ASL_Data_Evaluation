@@ -73,8 +73,10 @@ int main(int argc, char** argv) {
     }
 
     benchmark::Register("exact_sp_plain", std::bind(compute_sp_plain, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
-    benchmark::Register("improved_mc", std::bind(compute_sp_improved_mc, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, 1, &permutations, &point_dists, &sp, mid1, mid2, &phi, &H));
-
+    // SEGSEGV
+    //benchmark::Register("improved_mc", std::bind(compute_sp_improved_mc, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, 1, &permutations, &point_dists, &sp, mid1, mid2, &phi, &H));
+    benchmark::Register("exact_sp_knn_unroll4", std::bind(compute_sp_knn_unroll4, &data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp));
+    
 
     if (list) {
         benchmark::List();

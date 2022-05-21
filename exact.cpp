@@ -11,6 +11,7 @@
 #include <filesystem>
 
 #include "exact.h"
+#include "x86intrin.h"
 
 static std::vector<size_t> argsort(const std::vector<double>& mid) {
     std::vector<size_t> v(mid.size());
@@ -25,6 +26,61 @@ static std::vector<size_t> argsort(const std::vector<double>& mid) {
     return v;
 }
 
+void KNN_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<double>& mid) {
+    auto x_train_M = x_train->getM();
+    auto x_train_N = x_train->getN();
+    auto x_test_M = x_test->getM();
+    auto x_test_N = x_test->getN();
+    auto N1 = x_train_M;
+    auto N2 = x_test_M;
+    // bn == an
+
+    assert(x_test_N == x_train_N);
+    assert(gt->getM() == N2);
+    assert(gt->getN() == N1);
+
+    for (size_t i = 0; i < N2; i++) {
+        size_t j = 0;
+        // optimized as memset by gcc
+        for (j = 0; j < N1; j++) {
+            mid[j] = 0;
+        }
+        for (j = 0; j < N1 - 3; j+=4) {
+            for (size_t k = 0; k < x_train_N; k ++) {
+                double val = (x_train->getElement(j, k) - x_test->getElement(i, k)); // avx-ed by gcc
+                double val1 = (x_train->getElement(j + 1, k) - x_test->getElement(i, k));
+                double val2 = (x_train->getElement(j + 2, k) - x_test->getElement(i, k));
+                double val3 = (x_train->getElement(j + 3, k) - x_test->getElement(i, k));
+                mid[j] += val * val;
+                mid[j + 1] += val1 * val1;
+                mid[j + 2] += val2 * val2;
+                mid[j + 3] += val3 * val3;
+            }
+            mid[j] = std::sqrt(mid[j]); // optmized by sqrt by gcc
+            mid[j + 1] = std::sqrt(mid[j + 1]);
+            mid[j + 2] = std::sqrt(mid[j + 2]);
+            mid[j + 3] = std::sqrt(mid[j + 3]);
+        }
+        for (; j < N1; j++) {
+            for (size_t k = 0; k < x_train_N; k ++) {
+                double val = (x_train->getElement(j, k) - x_test->getElement(i, k));
+                mid[j] +=  val * val;
+            }
+            mid[j] = std::sqrt(mid[j]);
+        }
+        auto sorted = argsort(mid);
+        for (size_t k = 0; k < N1; k ++) {
+            gt->setElement(i, k, sorted[k]);
+        }
+#ifndef NDEBUG
+        fprintf(stderr, "%zd:", i);
+        for (auto& it : sorted) {
+            fprintf(stderr, "%zd ", it);
+        }
+        fprintf(stderr, "\n");
+#endif
+    }
+}
 
 void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<double>& mid) {
     auto x_train_M = x_train->getM();
@@ -86,6 +142,14 @@ void compute_single_unweighted_knn_class_shapley(
                 ));
         }
     }
+}
+
+void compute_sp_knn_unroll4(
+    const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
+    const Matrix* y_test, uint64_t K, std::vector<double>& mid,
+    Matrix* gt, Matrix* sp) {
+    KNN_unroll4(x_train, x_test, gt, mid);
+    compute_single_unweighted_knn_class_shapley(x_train, y_train, gt, y_test, K, sp);
 }
 
 void compute_sp_plain(
