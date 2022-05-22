@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <cmath>
 
-// const double eps = 1e-6;
-const double eps = 0.6;
+const double eps = 1e-6;
+// const double eps = 0.6;
 
 static void cmp(const Matrix* m, const double* v) {
     auto M = m->getM();
@@ -100,7 +100,7 @@ static void test_simple_array() {
         input_directory = input_directory / std::string("test_set_" #N); \
         TEST_ASSERT(std::filesystem::exists(input_directory)); \
         auto data = load_exact_data(input_directory);\
-        uint64_t num_permutes = 1000;\
+        uint64_t num_permutes = 100;\
         uint64_t K = 1;\
         Matrix permutations(num_permutes, data->x_train.getM());\
         Matrix point_dists(data->x_test.getM(), data->x_train.getM());\
