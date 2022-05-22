@@ -1,4 +1,6 @@
 #include <cmath>
+#include <algorithm>
+#include <random>
 
 #include "improved_mc.h"
 
@@ -71,7 +73,7 @@ void improved_single_unweighted_knn_class_shapley(
     assert(phi->getN() == N1);
     assert(H->getMaxSize() == K);
 
-    for (size_t k = 0; k < N1; k++) {
+    for (size_t k = 0; k < N2; k++) {
         phi->resetVal();
         for (size_t t = 0; t < num_permute; t++) {
             H->popAll();
