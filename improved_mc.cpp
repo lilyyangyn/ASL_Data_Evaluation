@@ -24,8 +24,18 @@ void random_permute(Matrix* permutations, uint64_t x_train_M, uint64_t num_permu
     for (size_t i = 0; i < x_train_M; i++) {
         mid[i] = i;
     }
+    auto rng = std::default_random_engine {};
     for (size_t i = 0; i < num_permute; i++) {
-        std::next_permutation(mid.begin(), mid.end());
+        // for (int i = x_train_M-1; i >= 0; --i){
+        //     //generate a random number [0, n-1]
+        //     int j = rand() % (i+1);
+        //     //swap the last element with element at random index
+        //     int temp = mid[i];
+        //     mid[i] = mid[j];
+        //     mid[j] = temp;
+        // }
+        // std::next_permutation(mid.begin(), mid.end());
+        std::shuffle(std::begin(mid), std::end(mid), rng);
         for (size_t j = 0; j < x_train_M; j++) {
             permutations->setElement(i, j, mid[j]);
         }
