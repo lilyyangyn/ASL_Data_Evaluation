@@ -29,7 +29,7 @@ target_include_directories(improved_mc PUBLIC include)
 target_include_directories(flops PUBLIC include)
 target_include_directories(benchmark PUBLIC include)
 
-target_compile_options(measure PRIVATE -march=native)
+# target_compile_options(measure PRIVATE -march=native)
 target_link_libraries(exact PUBLIC flops)
 target_link_libraries(improved_mc PUBLIC flops)
 target_link_libraries(measure PRIVATE benchmark exact improved_mc)

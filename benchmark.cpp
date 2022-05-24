@@ -80,9 +80,12 @@ void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests)
         printf("{\n");
         for (auto it = run.begin(); it != run.end(); it ++) {
             printf("  \"%s\": {\n", it->name);
-            printf("    \"cycles\": \"%f\",\n", it->result);
+            printf("    \"cycles\": \"%f\"", it->result);
 #ifdef FLOPS
+            printf(",\n");
             printf("    \"flops\": \"%ld\"\n", it->flops);
+#else
+            printf("\n");
 #endif
             printf("  }");
 
