@@ -48,7 +48,7 @@ void KNN_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::v
         for (j = 0; j < N1; j++) {
             mid[j] = 0;
         }
-        for (j = 0; j < N1 - 3; j+=4) {
+        for (j = 0; j + 3 < N1; j+=4) {
             for (size_t k = 0; k < x_train_N; k ++) {
                 auto val = (x_train->getElement(j, k) - x_test->getElement(i, k)); // avx-ed by gcc
                 auto val1 = (x_train->getElement(j + 1, k) - x_test->getElement(i, k));
