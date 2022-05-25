@@ -12,6 +12,9 @@ struct KNNPoint {
 
     bool operator<(const KNNPoint& rhs) const
     {
+#ifdef FLOPS
+        getCounter()->Increase(1);
+#endif
         return distance < rhs.distance;
     }
     // bool operator>(const KNNPoint& rhs) const
@@ -51,7 +54,7 @@ class FixedSizeKNNHeap {
             myheap.pop_back();
         }
 
-        std::vector<KNNPoint> getAllItem() {
+        const std::vector<KNNPoint>& getAllItem() {
             return myheap;
         }
 

@@ -138,22 +138,6 @@ TEST_SET_N(22)
 
 #define TEST_SET_N_ENTRY(N) "test_set_" #N, test_set_##N
 
-#ifdef FLOPS
-#include "flops.h"
-static void test_double_proxy() {
-    DoubleProxy p1(1.0), p2(2.0);
-    double d1, d2;
-    d1 = 1.0;
-    d2 = 2.0;
-    TEST_CHECK((p1 < p2) == (d1 < d2));
-    TEST_CHECK((p1 > p2) == (d1 > d2));
-    TEST_CHECK((p1 != p2) == (d1 != d2));
-    TEST_CHECK((p1 == p2) == (d1 == d2));
-    TEST_CHECK((p1 <= p2) == (d1 <= d2));
-    TEST_CHECK((p1 >= p2) == (d1 >= d2));
-    
-}
-#endif
 
 TEST_LIST = {
     { "test_simple_array", test_simple_array },
@@ -180,8 +164,5 @@ TEST_LIST = {
     { TEST_SET_N_ENTRY(20) },
     { TEST_SET_N_ENTRY(21) },
     { TEST_SET_N_ENTRY(22) },
-#ifdef FLOPS
-    { "test_double_proxy", test_double_proxy},
-#endif
     { NULL, NULL }
 };

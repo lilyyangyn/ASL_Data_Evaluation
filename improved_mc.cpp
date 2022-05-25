@@ -4,13 +4,18 @@
 
 #include "improved_mc.h"
 
-static double knn_utility(const Matrix* y_train, double y_test_point, uint64_t K, std::vector<KNNPoint> k_nearest_points) {
+static const double eps = 1e-6;
+
+static double knn_utility(const Matrix* y_train, double y_test_point, uint64_t K, const std::vector<KNNPoint>& k_nearest_points) {
     auto size = k_nearest_points.size();
 
     int sum = 0;
     for (size_t i = 0; i < size; i++) {
-        sum += int(y_train->getElement(0, k_nearest_points[i].idx) == y_test_point);
+        sum += int( (y_train->getElement(0, k_nearest_points[i].idx) - y_test_point ) < eps);
     }
+#ifdef FLOPS
+    getCounter()->Increase(size * 3 + 1); // 1 -, 1 <, 1 + per loop and 1 div
+#endif
     return double(sum)/size;
 }
 
@@ -59,9 +64,13 @@ void point_distances(const Matrix* x_train, const Matrix* x_test, Matrix *result
         }
         for (size_t j = 0; j < N1; j++) {
             for (size_t k = 0; k < x_train_N; k ++) {
-                mid[j] += (x_train->getElement(j, k) - x_test->getElement(i, k)) * (x_train->getElement(j, k) - x_test->getElement(i, k));
+                double scalar = x_train->getElement(j, k) - x_test->getElement(i, k);
+                mid[j] += scalar * scalar;
             }
             mid[j] = std::sqrt(mid[j]);
+#ifdef FLOPS
+            getCounter()->Increase(x_train_N * 3 + 1);
+#endif
         }
         for (size_t j = 0; j < N1; j++) {
             result->setElement(i, j, mid[j]);

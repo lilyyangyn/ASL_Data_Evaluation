@@ -63,6 +63,9 @@ void KNN_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::v
             mid[j + 1] = std::sqrt(mid[j + 1]);
             mid[j + 2] = std::sqrt(mid[j + 2]);
             mid[j + 3] = std::sqrt(mid[j + 3]);
+#ifdef FLOPS
+            getCounter()->Increase(4 + x_train_N * 3 * 4);
+#endif
         }
         for (; j < N1; j++) {
             for (size_t k = 0; k < x_train_N; k ++) {
@@ -70,6 +73,9 @@ void KNN_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::v
                 mid[j] +=  val * val;
             }
             mid[j] = std::sqrt(mid[j]);
+#ifdef FLOPS
+            getCounter()->Increase(1 + x_train_N * 3);
+#endif
         }
         auto sorted = argsort(mid);
         for (size_t k = 0; k < N1; k ++) {
@@ -104,9 +110,13 @@ void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<do
         }
         for (size_t j = 0; j < N1; j++) {
             for (size_t k = 0; k < x_train_N; k ++) {
-                mid[j] += (x_train->getElement(j, k) - x_test->getElement(i, k)) * (x_train->getElement(j, k) - x_test->getElement(i, k));
+                double scalar = (x_train->getElement(j, k) - x_test->getElement(i, k));
+                mid[j] += scalar * scalar;
             }
             mid[j] = std::sqrt(mid[j]);
+#ifdef FLOPS
+            getCounter()->Increase(1 + x_train_N * 3); // 1 is sqrt
+#endif
         }
         auto sorted = argsort(mid);
         for (size_t k = 0; k < N1; k ++) {
@@ -137,12 +147,18 @@ void compute_single_unweighted_knn_class_shapley(
 
     for (size_t j = 0; j < N2; j++) {
         result->setElement(j, gt->getElement(j, gtN - 1), int(y_train->getElement(0, gt->getElement(j, gtN - 1)) == y_test->getElement(0, j)) / double(N1));
+#ifdef FLOPS
+        getCounter()->Increase(2);
+#endif
         for (size_t i = N1 - 2; i <= N1 -2 ; i --) {
             result->setElement(j, gt->getElement(j, i), 
                 result->getElement(j, gt->getElement(j, i+ 1)) + (
                     double(int(y_train->getElement(0, gt->getElement(j, i)) == y_test->getElement(0, j)) -
                     int(y_train->getElement(0, gt->getElement(j, i + 1)) == y_test->getElement(0, j))) / double(K) * std::min(size_t(K), i + 1) / double(i + 1)
                 ));
+#ifdef FLOPS
+                getCounter()->Increase(4); // 2 ==, 2 div
+#endif
         }
     }
 }
