@@ -157,7 +157,88 @@ void compute_single_unweighted_knn_class_shapley(
                     int(y_train->getElement(0, gt->getElement(j, i + 1)) == y_test->getElement(0, j))) / double(K) * std::min(size_t(K), i + 1) / double(i + 1)
                 ));
 #ifdef FLOPS
-                getCounter()->Increase(4); // 2 ==, 2 div
+                getCounter()->Increase(5); // 2 ==, 2 div, 1mult
+#endif
+        }
+    }
+}
+
+static void compute_single_unweighted_knn_class_shapley_unroll4(
+    const Matrix* x_train, const Matrix* y_train, 
+    const Matrix* gt, const Matrix* y_test,
+    uint64_t K, Matrix* result) {
+    auto N1 = x_train->getM();
+    auto N2 = gt->getM();
+    auto gtN = gt->getN();
+
+    assert(y_train->getM() == 1);
+    assert(y_test->getM() == 1);
+    assert(result->getN() == N1);
+    assert(result->getM() == N2);
+
+    for (size_t j = 0; j < N2; j++) {
+        size_t i = N1 - 2 ;
+        double val = gt->getElement(j, gtN - 1);
+        result->setElement(j, val, int(y_train->getElement(0, val) == y_test->getElement(0, j)) / double(N1));
+#ifdef FLOPS
+        getCounter()->Increase(2);
+#endif
+        for (; i <= N1 -2 && i >= 3 ; i -=4) {
+            double gtji = gt->getElement(j, i);
+            double gtjip1 = gt->getElement(j, i + 1);
+            double t0j = y_test->getElement(0, j);
+
+            double gtji_1 = gt->getElement(j, i - 1);
+            double gtjip1_1 = gt->getElement(j, i);
+            double t0j_1 = y_test->getElement(0, j);
+
+            double gtji_2 = gt->getElement(j, i - 2);
+            double gtjip1_2 = gt->getElement(j, i - 1);
+            double t0j_2 = y_test->getElement(0, j);
+
+            double gtji_3 = gt->getElement(j, i - 3);
+            double gtjip1_3 = gt->getElement(j, i - 2);
+            double t0j_3 = y_test->getElement(0, j);
+
+            result->setElement(j, gtji, 
+                result->getElement(j, gtjip1) + (
+                    double(int(y_train->getElement(0, gtji) == t0j) -
+                    int(y_train->getElement(0, gtjip1) == t0j)) / double(K) * std::min(size_t(K), i + 1) / double(i + 1)
+                ));
+
+            result->setElement(j, gtji_1, 
+                result->getElement(j, gtjip1_1) + (
+                    double(int(y_train->getElement(0, gtji_1) == t0j_1) -
+                    int(y_train->getElement(0, gtjip1_1) == t0j_1)) / double(K) * std::min(size_t(K), i) / double(i)
+                ));
+
+            result->setElement(j, gtji_2, 
+                result->getElement(j, gtjip1_2) + (
+                    double(int(y_train->getElement(0, gtji_2) == t0j_2) -
+                    int(y_train->getElement(0, gtjip1_2) == t0j_2)) / double(K) * std::min(size_t(K), i - 1) / double(i - 1)
+                ));
+
+            result->setElement(j, gtji_3, 
+                result->getElement(j, gtjip1_3) + (
+                    double(int(y_train->getElement(0, gtji_3) == t0j_3) -
+                    int(y_train->getElement(0, gtjip1_3) == t0j_3)) / double(K) * std::min(size_t(K), i - 2) / double(i - 2)
+                ));
+#ifdef FLOPS
+                getCounter()->Increase(20); // 2 ==, 2 div, 1mult
+#endif
+        }
+
+        for (; i <= N1 -2; i --) {
+            double gtji = gt->getElement(j, i);
+            double gtjip1 = gt->getElement(j, i + 1);
+            double t0j = y_test->getElement(0, j);
+            result->setElement(j, gtji, 
+                result->getElement(j, gtjip1) + (
+                    double(int(y_train->getElement(0, gtji) == t0j) -
+                    int(y_train->getElement(0, gtjip1) == t0j)) / double(K) * std::min(size_t(K), i + 1) / double(i + 1)
+                ));
+#ifdef FLOPS
+                getCounter()->Increase(5); // 2 ==, 2 div, 1mult
 #endif
         }
     }
@@ -168,7 +249,8 @@ void compute_sp_knn_unroll4(
     const Matrix* y_test, uint64_t K, std::vector<double>& mid,
     Matrix* gt, Matrix* sp) {
     KNN_unroll4(x_train, x_test, gt, mid);
-    compute_single_unweighted_knn_class_shapley(x_train, y_train, gt, y_test, K, sp);
+    // compute_single_unweighted_knn_class_shapley(x_train, y_train, gt, y_test, K, sp);
+    compute_single_unweighted_knn_class_shapley_unroll4(x_train, y_train, gt, y_test, K, sp);
 }
 
 void compute_sp_plain(

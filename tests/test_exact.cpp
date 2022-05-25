@@ -110,6 +110,9 @@ static void test_simple_array() {
         write_csv(input_directory / "my_sp_gt.csv", &sp);\
         cmp_matrix(&gt, &r_gt);\
         cmp_matrix(&sp, &r_sp);\
+        compute_sp_knn_unroll4(&data->x_train, &data->x_test, &data->y_train, &data->y_test, 1, mid, &gt, &sp);\
+        cmp_matrix(&gt, &r_gt);\
+        cmp_matrix(&sp, &r_sp);\
     } \
 
 TEST_SET_N(0)

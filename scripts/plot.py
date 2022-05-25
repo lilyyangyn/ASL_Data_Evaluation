@@ -126,11 +126,11 @@ if __name__ == "__main__":
     # yline -> flops/cycle
     xs = []
     for d in data:
-        xs.append([ log2( r.x_train.count() + r.x_test.count() + r.y_train.count() + r.y_test.count()) for r in d if r.x_train.M == 1000 and r.x_test.M == 2])
+        xs.append([ log2( r.x_train.count() + r.x_test.count() + r.y_train.count() + r.y_test.count()) for r in d if r.x_train.M == 1000 and r.x_test.N < 20])
     
     ys = []
     for d in data:
-        ys.append([ r.flops / r.cycles for r in d if r.x_train.M == 1000 and r.x_test.M == 2])
+        ys.append([ r.flops / r.cycles for r in d if r.x_train.M == 1000 and r.x_test.N < 20])
 
     for idx, test in enumerate(all_tests):
         x = xs[idx]
