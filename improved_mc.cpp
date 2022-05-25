@@ -107,10 +107,10 @@ void improved_single_unweighted_knn_class_shapley(
                     phi->setElement(t, cur_idx, utility - prev_utility);
                     prev_utility = utility;
                 } else {
-                    // phi->setElement(t, cur_idx, 
-                    //     phi->getElement(t, permutations->getElement(t, i-1)));
                     phi->setElement(t, cur_idx, 
-                        phi->getElement(t, 0));
+                        phi->getElement(t, permutations->getElement(t, i-1)));
+                    // phi->setElement(t, cur_idx, 
+                    //     phi->getElement(t, 0));
                 }
             }
         }
