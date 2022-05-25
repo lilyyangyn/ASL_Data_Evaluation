@@ -11,7 +11,7 @@ static double knn_utility(const Matrix* y_train, double y_test_point, uint64_t K
 
     int sum = 0;
     for (size_t i = 0; i < size; i++) {
-        sum += int( (y_train->getElement(0, k_nearest_points[i].idx) - y_test_point ) < eps);
+        sum += int( std::fabs(y_train->getElement(0, k_nearest_points[i].idx) - y_test_point ) < eps);
     }
 #ifdef FLOPS
     getCounter()->Increase(size * 3 + 1); // 1 -, 1 <, 1 + per loop and 1 div
