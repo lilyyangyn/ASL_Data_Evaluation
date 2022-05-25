@@ -15,6 +15,7 @@ static double knn_utility(const Matrix* y_train, double y_test_point, uint64_t K
     }
 #ifdef FLOPS
     getCounter()->Increase(size * 3 + 1); // 1 -, 1 <, 1 + per loop and 1 div
+                                          // fabs flops???
 #endif
     return double(sum)/size;
 }
