@@ -26,3 +26,11 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCOUNT_FLOPS=yes
 make
 ```
+
+Custom Releae flags:
+
+```
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=native -O3 -ffast-math"
+```
