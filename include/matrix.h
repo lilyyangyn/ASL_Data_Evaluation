@@ -47,10 +47,16 @@ public:
 
 
     double getElement(size_t i, size_t j) const {
+#ifdef FLOPS
+        getCounter()->IncreaseRead(8);
+#endif
         return this->val[i * this->n + j];
     }
 
     void setElement(size_t i, size_t j, double d) {
+#ifdef FLOPS
+        getCounter()->IncreaseWrite(8);
+#endif
         this->val[i*this->n + j] = d;
     }
 

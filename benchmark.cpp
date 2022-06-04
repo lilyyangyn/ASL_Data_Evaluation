@@ -17,6 +17,8 @@ typedef struct Benchmark {
     double result;
 #ifdef FLOPS
     uint64_t flops;
+    uint64_t read;
+    uint64_t write;
 #endif
 
     Benchmark(const char* n, std::function<void()> f, double r) : name(n), func(f), result(r) {}
@@ -103,6 +105,7 @@ void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests)
         v.result = 0;
 #ifdef FLOPS
         getCounter()->Reset();
+        getCounter()->ResetRW();
 #endif
         for (size_t i = 0; i < repeat; i ++ ) {
 
@@ -110,6 +113,8 @@ void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests)
         }
 #ifdef FLOPS
         v.flops = getCounter()->Get();
+        v.read = getCounter()->GetRead();
+        v.write = getCounter()->GetWrite();
 #endif
     }
 
@@ -120,7 +125,9 @@ void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests)
             printf("    \"cycles\": \"%f\"", it->result);
 #ifdef FLOPS
             printf(",\n");
-            printf("    \"flops\": \"%ld\"\n", it->flops);
+            printf("    \"flops\": \"%ld\",\n", it->flops);
+            printf("    \"read\": \"%ld\",\n", it->read);
+            printf("    \"write\": \"%ld\"\n", it->write);
 #else
             printf("\n");
 #endif
@@ -136,7 +143,7 @@ void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests)
     } else {
         for (auto& v : run) {
 #ifdef FLOPS
-            printf("%s: %f cycles (repeat %zd times) %ld flops\n", v.name, v.result, repeat, v.flops);
+            printf("%s: %f cycles (repeat %zd times) %ld flops %ld bytes transferred (%ld read, %ld write)\n", v.name, v.result, repeat, v.flops, v.read + v.write, v.read, v.write);
 #else
             printf("%s: %f cycles (repeat %zd times)\n", v.name, v.result, repeat);
 #endif
