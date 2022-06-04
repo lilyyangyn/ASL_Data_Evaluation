@@ -6,6 +6,8 @@
 #include <x86intrin.h>
 #include <string>
 #include "flops.h"
+#include <cstdlib>
+#include <chrono>
 
 namespace benchmark {
 
@@ -45,8 +47,43 @@ void List() {
     }
 }
 
+#define WARM_DATA_SIZE (1024UL)
+#define FREQ_TARGET (3.0) // 3G
+#define WARM_TRIES (64)
+
+static uint64_t data[WARM_DATA_SIZE];
+
+static void warm() {
+    for (size_t i = 0 ; i < WARM_DATA_SIZE; i++) {
+        data[i] *= data[(i + 159) % WARM_DATA_SIZE];
+    }
+}
+
 void Run(bool json_output, size_t repeat, const std::vector<std::string>& tests) {
     std::vector<Benchmark> run;
+    int tries = WARM_TRIES;
+
+    while (tries -- > 0) {
+        const Benchmark b = {
+            "warm",
+            warm,
+            0.0
+        };
+        auto start = std::chrono::system_clock::now();
+        double result = Measure(b);
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> secs = end-start;
+        double freq = result / 1e9 / secs.count();
+        // fprintf(stderr, "freq: %f\n", freq);
+
+        if (freq > FREQ_TARGET) {
+            break;
+        }
+    }
+
+    if (tries <= 0) {
+        fprintf(stderr, "Warning: frequency doesn't reach %f GHz, result might be wrong!\n", FREQ_TARGET);
+    }
 
     if (tests.size() == 0) {
         run.assign(bench.begin(), bench.end());
