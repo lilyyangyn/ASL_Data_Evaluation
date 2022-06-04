@@ -1,6 +1,7 @@
 #include <cmath>
 #include <algorithm>
 #include <random>
+#include <immintrin.h>
 
 #include "improved_mc.h"
 
@@ -57,6 +58,95 @@ void random_permute(Matrix* permutations, uint64_t x_train_M, uint64_t num_permu
         std::shuffle(std::begin(mid), std::end(mid), rng);
         for (size_t j = 0; j < x_train_M; j++) {
             permutations->setElement(i, j, mid[j]);
+        }
+    }
+}
+
+void point_distances_simd(const Matrix* x_train, const Matrix* x_test, Matrix *result, std::vector<double>& mid) {
+    auto x_train_M = x_train->getM();
+    auto x_train_N = x_train->getN();
+    auto x_test_M = x_test->getM();
+    auto x_test_N = x_test->getN(); 
+    auto N1 = x_train_M;
+    auto N2 = x_test_M;
+    assert(x_test_N == x_train_N);
+    assert(result->getM() == N2);
+    assert(result->getN() == N1);
+
+    __m256d zero_vec = _mm256_set1_pd(0);
+    __m256d x_test_vec, val_vec, val1_vec, val2_vec, val3_vec, mid_vec, mid1_vec, mid2_vec, mid3_vec, midsum_vec, midsum1_vec;
+    double* x_train_val = x_train->getVal();
+    double* x_test_val = x_test->getVal();
+    for (size_t i = 0; i < N2; i++) {
+        size_t j = 0;      
+        for (j = 0; j + 3 < N1; j+=4) {
+            size_t k = 0;
+            mid_vec = _mm256_set1_pd(0);
+            mid1_vec = _mm256_set1_pd(0);
+            mid2_vec = _mm256_set1_pd(0);
+            mid3_vec = _mm256_set1_pd(0);
+            for (k = 0; k+3 < x_train_N; k+=4) {
+                double * idx = x_train_val + j*x_train_N + k;
+                x_test_vec = _mm256_load_pd(x_test_val + i*x_test_N + k);
+                val_vec = _mm256_sub_pd(_mm256_load_pd(idx), x_test_vec);
+                val1_vec = _mm256_sub_pd(_mm256_load_pd(idx + x_train_N), x_test_vec);
+                val2_vec = _mm256_sub_pd(_mm256_load_pd(idx + 2*x_train_N), x_test_vec);
+                val3_vec = _mm256_sub_pd(_mm256_load_pd(idx + 3*x_train_N), x_test_vec);
+
+                mid_vec = _mm256_fmadd_pd(val_vec, val_vec, mid_vec);
+                mid1_vec = _mm256_fmadd_pd(val1_vec, val1_vec, mid1_vec);
+                mid2_vec = _mm256_fmadd_pd(val2_vec, val2_vec, mid2_vec);
+                mid3_vec = _mm256_fmadd_pd(val3_vec, val3_vec, mid3_vec);
+            }
+            midsum_vec = _mm256_add_pd(mid_vec, mid1_vec);
+            midsum1_vec = _mm256_add_pd(mid2_vec, mid3_vec);
+            _mm256_store_pd(&mid[j], _mm256_add_pd(midsum_vec, midsum1_vec));
+
+            for (; k < x_train_N; k ++) {
+                auto x_val = x_test->getElement(i, k);
+                auto val = (x_train->getElement(j, k) - x_val); // avx-ed by gcc
+                auto val1 = (x_train->getElement(j + 1, k) - x_val);
+                auto val2 = (x_train->getElement(j + 2, k) - x_val);
+                auto val3 = (x_train->getElement(j + 3, k) - x_val);
+                mid[j] += val * val;
+                mid[j + 1] += val1 * val1;
+                mid[j + 2] += val2 * val2;
+                mid[j + 3] += val3 * val3;
+            }
+
+            mid_vec = _mm256_load_pd(&mid[j]);
+            _mm256_store_pd(&mid[j], _mm256_sqrt_pd(mid_vec));
+#ifdef FLOPS
+            getCounter()->Increase(4 + x_train_N * 3 * 4);
+#endif
+        }
+        for (; j < N1; j++) {
+            // size_t k = 0;
+            // mid_vec = _mm256_set1_pd(0);
+            // for (k = 0; k+3 < x_train_N; k+=4) {
+            //     double * idx = x_train_val + j*x_train_N + k;
+            //     x_test_vec = _mm256_load_pd(x_test_val + i*x_test_N + k);
+            //     val_vec = _mm256_sub_pd(_mm256_load_pd(idx), x_test_vec);
+            //     mid_vec = _mm256_fmadd_pd(val_vec, val_vec, mid_vec);
+            // }
+            // _mm256_store_pd(&mid[j], mid_vec);
+
+            // for (; k < x_train_N; k ++) {
+            //     auto x_val = x_test->getElement(i, k);
+            //     auto val = (x_train->getElement(j, k) - x_val); // avx-ed by gcc
+            //     mid[j] += val * val;
+            // }
+            for (size_t k = 0; k < x_train_N; k ++) {
+                auto val = (x_train->getElement(j, k) - x_test->getElement(i, k));
+                mid[j] +=  val * val;
+            }
+            mid[j] = std::sqrt(mid[j]);
+#ifdef FLOPS
+            getCounter()->Increase(1 + x_train_N * 3);
+#endif
+        }
+        for (size_t j = 0; j < N1; j++) {
+            result->setElement(i, j, mid[j]);
         }
     }
 }
@@ -257,5 +347,14 @@ void compute_sp_improved_mc_unroll4(
     Matrix* sp, std::vector<uint64_t>& mid1, std::vector<double>& mid2, Matrix* phi, FixedSizeKNNHeap* H) {
     random_permute(permutations, x_train->getM(), num_permutes, mid1);
     point_distances_unroll4(x_train, x_test, point_dists, mid2);
+    improved_single_unweighted_knn_class_shapley_unroll4(y_train, y_test, permutations, point_dists, K, num_permutes, sp, phi, H);
+}
+
+void compute_sp_improved_mc_simd(
+    const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
+    const Matrix* y_test, uint64_t K, uint64_t num_permutes, Matrix* permutations, Matrix* point_dists, 
+    Matrix* sp, std::vector<uint64_t>& mid1, std::vector<double>& mid2, Matrix* phi, FixedSizeKNNHeap* H) {
+    random_permute(permutations, x_train->getM(), num_permutes, mid1);
+    point_distances_simd(x_train, x_test, point_dists, mid2);
     improved_single_unweighted_knn_class_shapley_unroll4(y_train, y_test, permutations, point_dists, K, num_permutes, sp, phi, H);
 }

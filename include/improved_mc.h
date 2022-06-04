@@ -76,6 +76,7 @@ class FixedSizeKNNHeap {
 
 void random_permute(Matrix* permutations, uint64_t x_train_M, uint64_t num_permute, std::vector<uint64_t>& mid);
 
+void point_distances_simd(const Matrix* x_train, const Matrix* x_test, Matrix *result, std::vector<double>& mid);
 void point_distances_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix *result, std::vector<double>& mid);
 void point_distances(const Matrix* x_train, const Matrix* x_test, Matrix *result, std::vector<double>& mid);
 
@@ -90,6 +91,10 @@ void improved_single_unweighted_knn_class_shapley(
     uint64_t K, uint64_t num_permute, Matrix* result, 
     Matrix* phi, FixedSizeKNNHeap* H);
 
+void compute_sp_improved_mc_simd(
+    const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
+    const Matrix* y_test, uint64_t K, uint64_t num_permutes, Matrix* permutations, Matrix* point_dists, 
+    Matrix* sp, std::vector<uint64_t>& mid1, std::vector<double>& mid2, Matrix* phi, FixedSizeKNNHeap* H);
 void compute_sp_improved_mc_unroll4(
     const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
     const Matrix* y_test, uint64_t K, uint64_t num_permutes, Matrix* permutations, Matrix* point_dists, 
