@@ -87,11 +87,11 @@ void point_distances_simd(const Matrix* x_train, const Matrix* x_test, Matrix *r
             mid3_vec = _mm256_set1_pd(0);
             for (k = 0; k+3 < x_train_N; k+=4) {
                 double * idx = x_train_val + j*x_train_N + k;
-                x_test_vec = _mm256_load_pd(x_test_val + i*x_test_N + k);
-                val_vec = _mm256_sub_pd(_mm256_load_pd(idx), x_test_vec);
-                val1_vec = _mm256_sub_pd(_mm256_load_pd(idx + x_train_N), x_test_vec);
-                val2_vec = _mm256_sub_pd(_mm256_load_pd(idx + 2*x_train_N), x_test_vec);
-                val3_vec = _mm256_sub_pd(_mm256_load_pd(idx + 3*x_train_N), x_test_vec);
+                x_test_vec = _mm256_loadu_pd(x_test_val + i*x_test_N + k);
+                val_vec = _mm256_sub_pd(_mm256_loadu_pd(idx), x_test_vec);
+                val1_vec = _mm256_sub_pd(_mm256_loadu_pd(idx + x_train_N), x_test_vec);
+                val2_vec = _mm256_sub_pd(_mm256_loadu_pd(idx + 2*x_train_N), x_test_vec);
+                val3_vec = _mm256_sub_pd(_mm256_loadu_pd(idx + 3*x_train_N), x_test_vec);
 
                 mid_vec = _mm256_fmadd_pd(val_vec, val_vec, mid_vec);
                 mid1_vec = _mm256_fmadd_pd(val1_vec, val1_vec, mid1_vec);
@@ -100,7 +100,8 @@ void point_distances_simd(const Matrix* x_train, const Matrix* x_test, Matrix *r
             }
             midsum_vec = _mm256_add_pd(mid_vec, mid1_vec);
             midsum1_vec = _mm256_add_pd(mid2_vec, mid3_vec);
-            _mm256_store_pd(&mid[j], _mm256_add_pd(midsum_vec, midsum1_vec));
+            midsum_vec = _mm256_add_pd(midsum_vec, midsum1_vec);
+            _mm256_storeu_pd(&mid[j], midsum_vec);
 
             for (; k < x_train_N; k ++) {
                 auto x_val = x_test->getElement(i, k);
@@ -114,8 +115,8 @@ void point_distances_simd(const Matrix* x_train, const Matrix* x_test, Matrix *r
                 mid[j + 3] += val3 * val3;
             }
 
-            mid_vec = _mm256_load_pd(&mid[j]);
-            _mm256_store_pd(&mid[j], _mm256_sqrt_pd(mid_vec));
+            mid_vec = _mm256_loadu_pd(&mid[j]);
+            _mm256_storeu_pd(&mid[j], _mm256_sqrt_pd(mid_vec));
 #ifdef FLOPS
             getCounter()->Increase(4 + x_train_N * 3 * 4);
 #endif
