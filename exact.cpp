@@ -81,13 +81,13 @@ void KNN_unroll4(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::v
         for (size_t k = 0; k < N1; k ++) {
             gt->setElement(i, k, sorted[k]);
         }
-#ifndef NDEBUG
-        fprintf(stderr, "%zd:", i);
-        for (auto& it : sorted) {
-            fprintf(stderr, "%zd ", it);
-        }
-        fprintf(stderr, "\n");
-#endif
+// #ifndef NDEBUG
+//         fprintf(stderr, "%zd:", i);
+//         for (auto& it : sorted) {
+//             fprintf(stderr, "%zd ", it);
+//         }
+//         fprintf(stderr, "\n");
+// #endif
     }
 }
 
@@ -122,13 +122,13 @@ void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<do
         for (size_t k = 0; k < N1; k ++) {
             gt->setElement(i, k, sorted[k]);
         }
-#ifndef NDEBUG
-        fprintf(stderr, "%zd:", i);
-        for (auto& it : sorted) {
-            fprintf(stderr, "%zd ", it);
-        }
-        fprintf(stderr, "\n");
-#endif
+// #ifndef NDEBUG
+//         fprintf(stderr, "%zd:", i);
+//         for (auto& it : sorted) {
+//             fprintf(stderr, "%zd ", it);
+//         }
+//         fprintf(stderr, "\n");
+// #endif
     }
 }
 
