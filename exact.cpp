@@ -132,6 +132,85 @@ void KNN(const Matrix* x_train, const Matrix* x_test, Matrix* gt, std::vector<do
     }
 }
 
+void KNN_simd(const Matrix* x_train, const Matrix* x_test, Matrix *gt, std::vector<double>& mid) {
+    auto x_train_M = x_train->getM();
+    auto x_train_N = x_train->getN();
+    auto x_test_M = x_test->getM();
+    auto x_test_N = x_test->getN(); 
+    auto N1 = x_train_M;
+    auto N2 = x_test_M;
+    // bn == an
+
+    assert(x_test_N == x_train_N);
+    assert(gt->getM() == N2);
+    assert(gt->getN() == N1);
+    double* x_train_val = x_train->getVal();
+    double* x_test_val = x_test->getVal();
+
+    __m256d zeros = _mm256_setzero_pd();
+    __m256d x_test_vec, val_vec, val1_vec, val2_vec, val3_vec, mid_vec, mid1_vec, mid2_vec, mid3_vec, midsum_vec, midsum1_vec;
+    for (size_t i = 0; i < N2; i++) {
+        size_t j = 0;
+        for (; j < N1 - 3; j+=4) {
+            mid_vec = zeros;
+            mid1_vec = zeros;
+            mid2_vec = zeros;
+            mid3_vec = zeros;
+            size_t k = 0;
+            for (; k < x_train_N - 3; k+=4) {
+                double * idx = x_train_val + j*x_train_N + k;
+                x_test_vec = _mm256_loadu_pd(x_test_val + i*x_test_N + k);
+                val_vec = _mm256_sub_pd(_mm256_loadu_pd(idx), x_test_vec);
+                val1_vec = _mm256_sub_pd(_mm256_loadu_pd(idx + x_train_N), x_test_vec);
+                val2_vec = _mm256_sub_pd(_mm256_loadu_pd(idx + 2*x_train_N), x_test_vec);
+                val3_vec = _mm256_sub_pd(_mm256_loadu_pd(idx + 3*x_train_N), x_test_vec);
+
+                mid_vec = _mm256_fmadd_pd(val_vec, val_vec, mid_vec);
+                mid1_vec = _mm256_fmadd_pd(val1_vec, val1_vec, mid1_vec);
+                mid2_vec = _mm256_fmadd_pd(val2_vec, val2_vec, mid2_vec);
+                mid3_vec = _mm256_fmadd_pd(val3_vec, val3_vec, mid3_vec);
+            }
+            midsum_vec = _mm256_add_pd(mid_vec, mid1_vec);
+            midsum1_vec = _mm256_add_pd(mid2_vec, mid3_vec);
+            midsum_vec = _mm256_add_pd(midsum_vec, midsum1_vec);
+            _mm256_storeu_pd(&mid[j], midsum_vec);
+
+            for (; k < x_train_N; k++) {
+                auto x_val = x_test->getElement(i, k);
+                auto val = (x_train->getElement(j, k) - x_val); // avx-ed by gcc
+                auto val1 = (x_train->getElement(j + 1, k) - x_val);
+                auto val2 = (x_train->getElement(j + 2, k) - x_val);
+                auto val3 = (x_train->getElement(j + 3, k) - x_val);
+                mid[j] += val * val;
+                mid[j + 1] += val1 * val1;
+                mid[j + 2] += val2 * val2;
+                mid[j + 3] += val3 * val3;
+            }
+
+            mid_vec = _mm256_loadu_pd(&mid[j]);
+            _mm256_storeu_pd(&mid[j], _mm256_sqrt_pd(mid_vec));
+#ifdef FLOPS
+            getCounter()->Increase(4 + x_train_N * 3 * 4);
+#endif
+        }
+        for (; j < N1; j++) {
+            for (size_t k = 0; k < x_train_N; k ++) {
+                auto val = (x_train->getElement(j, k) - x_test->getElement(i, k));
+                mid[j] +=  val * val;
+            }
+            mid[j] = std::sqrt(mid[j]);
+#ifdef FLOPS
+            getCounter()->Increase(1 + x_train_N * 3);
+#endif
+        }
+        auto sorted = argsort(mid);
+        for (size_t k = 0; k < N1; k++) {
+            gt->setElement(i, k, sorted[k]);
+        }
+    }
+}
+
+
 void compute_single_unweighted_knn_class_shapley(
     const Matrix* x_train, const Matrix* y_train, 
     const Matrix* gt, const Matrix* y_test,
@@ -249,6 +328,15 @@ void compute_sp_knn_unroll4(
     const Matrix* y_test, uint64_t K, std::vector<double>& mid,
     Matrix* gt, Matrix* sp) {
     KNN_unroll4(x_train, x_test, gt, mid);
+    // compute_single_unweighted_knn_class_shapley(x_train, y_train, gt, y_test, K, sp);
+    compute_single_unweighted_knn_class_shapley_unroll4(x_train, y_train, gt, y_test, K, sp);
+}
+
+void compute_sp_knn_simd(
+    const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
+    const Matrix* y_test, uint64_t K, std::vector<double>& mid,
+    Matrix* gt, Matrix* sp) {
+    KNN_simd(x_train, x_test, gt, mid);
     // compute_single_unweighted_knn_class_shapley(x_train, y_train, gt, y_test, K, sp);
     compute_single_unweighted_knn_class_shapley_unroll4(x_train, y_train, gt, y_test, K, sp);
 }

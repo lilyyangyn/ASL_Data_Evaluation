@@ -59,3 +59,8 @@ void compute_sp_knn_unroll4(
     const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
     const Matrix* y_test, uint64_t K, std::vector<double>& mid,
     Matrix* gt, Matrix* sp);
+
+void compute_sp_knn_simd(
+    const Matrix* x_train, const Matrix* x_test, const Matrix* y_train, 
+    const Matrix* y_test, uint64_t K, std::vector<double>& mid,
+    Matrix* gt, Matrix* sp);
