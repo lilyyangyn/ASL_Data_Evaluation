@@ -7,6 +7,9 @@
 
 static const double eps = 1e-6;
 
+const int CACHE_SIZE = 0; // in doubles
+const int B = sqrt(CACHE_SIZE / 3);  // blocking in B*B doubles
+
 static double knn_utility_unroll4(const Matrix* y_train, double y_test_point, uint64_t K, const std::vector<KNNPoint>& k_nearest_points) {
     auto size = k_nearest_points.size();
 
@@ -236,6 +239,68 @@ void point_distances(const Matrix* x_train, const Matrix* x_test, Matrix *result
     }
 }
 
+void improved_single_unweighted_knn_class_shapley_simd(
+    const Matrix* y_train, const Matrix* y_test,
+    const Matrix* permutations, const Matrix* distances, 
+    uint64_t K, uint64_t num_permute, Matrix* result, 
+    Matrix* phi, FixedSizeKNNHeap* H) { 
+    
+    assert(H->getMaxSize() == 1);  // Otherwise, vectorization impossible
+
+    auto N1 = y_train->getN();
+    auto N2 = y_test->getN();
+
+    assert(result->getM() == N2);
+    assert(result->getN() == N1);
+    assert(phi->getM() == num_permute);
+    assert(phi->getN() == N1);
+    assert(H->getMaxSize() == K);
+
+    for (size_t k = 0; k < N2; k++) {
+        phi->resetVal();
+        for (size_t t = 0; t < num_permute; t++) {
+            KNNPoint Max(0, std::numeric_limits<double>::max());  // H->popAll();
+            double prev_utility = 0;
+            for (size_t i = 0; i < N1; i++) {
+                // insert permutation to the heap
+                auto cur_idx = permutations->getElement(t, i);
+                bool modified = true;
+                // H->push(KNNPoint(cur_idx, distances->getElement(k, cur_idx)));
+                KNNPoint cur = KNNPoint(cur_idx, distances->getElement(k, cur_idx));
+                if (cur.distance < Max.distance) { Max = cur; }
+                else { modified = false; }
+                if (modified) {
+                    double utility = knn_utility_unroll4(y_train, y_test->getElement(0, k), K, H->getAllItem());
+                    phi->setElement(t, cur_idx, utility - prev_utility);
+                    prev_utility = utility;
+                } else {
+                    phi->setElement(t, cur_idx, 
+                        phi->getElement(t, permutations->getElement(t, i-1)));
+                }
+            }
+        }
+
+        for (size_t i = 0; i < N1; i++) {
+            size_t t = 0;
+            __m256d sums = _mm256_set1_pd(0);
+            double sum0 = 0;
+            __m256d phi_elements;
+            double* phi_val = phi->getVal();
+            for (t = 0; t + 3 < num_permute; t+=4) {
+                phi_elements = _mm256_load_pd(phi_val + t*N1 + i);
+                sums = _mm256_add_pd(sums, phi_elements);
+            }
+            for (; t < num_permute; t++) {
+                sum0 += phi->getElement(t, i);
+            }
+            double sums_arr[4];
+            memcpy(sums_arr, &sums, sizeof(sums_arr));
+            double sum = sums_arr[0] + sums_arr[1] + sums_arr[2] + sums_arr[3] + sum0;
+            result->setElement(k, i, sum/num_permute);
+        } 
+    }
+}
+
 void improved_single_unweighted_knn_class_shapley_unroll4(
     const Matrix* y_train, const Matrix* y_test,
     const Matrix* permutations, const Matrix* distances, 
@@ -357,5 +422,7 @@ void compute_sp_improved_mc_simd(
     Matrix* sp, std::vector<uint64_t>& mid1, std::vector<double>& mid2, Matrix* phi, FixedSizeKNNHeap* H) {
     random_permute(permutations, x_train->getM(), num_permutes, mid1);
     point_distances_simd(x_train, x_test, point_dists, mid2);
-    improved_single_unweighted_knn_class_shapley_unroll4(y_train, y_test, permutations, point_dists, K, num_permutes, sp, phi, H);
+    if (H->getMaxSize() == 1)
+        improved_single_unweighted_knn_class_shapley_simd(y_train, y_test, permutations, point_dists, K, num_permutes, sp, phi, H);
+    else improved_single_unweighted_knn_class_shapley_unroll4(y_train, y_test, permutations, point_dists, K, num_permutes, sp, phi, H);
 }
